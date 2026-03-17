@@ -1,221 +1,108 @@
-const { createClient } = require("@supabase/supabase-js");
+<!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js-eu1.hs-scripts.com/139613055.js"></script>
+<!-- End of HubSpot Embed Code -->
+<!-- Chatbot French Tech Grand Paris -->
+<script>
+(function() {
+  var VERCEL_URL = "https://chatbot-ftgp.vercel.app";
 
-// Map programme → URL FTGP
-const PROGRAM_URLS = {
-  "track-ia": "https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle",
-  "hiit": "https://www.frenchtech-grandparis.com/ft-programs/hiit",
-  "gen50tech": "https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis",
-  "ville-de-demain": "https://www.frenchtech-grandparis.com/ft-programs/ville-de-demain",
-  "scaleup-excellence": "https://www.frenchtech-grandparis.com/ft-programs/scale-up-excellence",
-  "je-choisis": "https://www.frenchtech-grandparis.com/ft-programs/je-choisis-la-french-tech",
-  "tremplin": "https://www.frenchtech-grandparis.com/ft-programs/french-tech-tremplin",
-  "central": "https://www.frenchtech-grandparis.com/ft-programs/french-tech-central",
-  "programmes": "https://www.frenchtech-grandparis.com/programmes",
-};
+  var style = document.createElement("style");
+  style.textContent = "#ftgp-chat-btn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#0045B3;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,69,179,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;}#ftgp-chat-box{position:fixed;bottom:90px;right:24px;width:370px;height:520px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(22,11,71,0.18);z-index:9998;display:none;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}#ftgp-chat-header{background:#0045B3;color:#fff;padding:16px 18px;font-weight:700;font-size:15px;letter-spacing:0.01em;}#ftgp-chat-header span{display:block;font-size:11px;font-weight:400;opacity:0.8;margin-top:2px;}#ftgp-chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#f8f9fc;}.ftgp-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;word-break:break-word;}.ftgp-msg.bot{background:#fff;color:#160B47;align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}.ftgp-msg.user{background:#0045B3;color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}.ftgp-msg a{color:#0045B3;text-decoration:underline;font-weight:600;}.ftgp-msg.user a{color:#fff;}.ftgp-msg b,.ftgp-msg strong{font-weight:700;}.ftgp-msg i,.ftgp-msg em{font-style:italic;}.ftgp-msg ul{margin:6px 0 6px 16px;padding:0;}.ftgp-msg li{margin-bottom:3px;}#ftgp-chat-input{display:flex;padding:12px;border-top:1px solid #e8eaf0;gap:8px;background:#fff;}#ftgp-chat-input input{flex:1;border:1px solid #ddd;border-radius:10px;padding:9px 13px;font-size:14px;outline:none;background:#f8f9fc;}#ftgp-chat-input input:focus{border-color:#0045B3;background:#fff;}#ftgp-chat-input button{background:#0045B3;color:#fff;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:background 0.2s;}#ftgp-chat-input button:hover{background:#003494;}.ftgp-typing{display:flex;gap:4px;align-items:center;padding:10px 14px;}.ftgp-typing span{width:7px;height:7px;background:#0045B3;border-radius:50%;animation:ftgp-bounce 1.2s infinite;opacity:0.6;}.ftgp-typing span:nth-child(2){animation-delay:0.2s;}.ftgp-typing span:nth-child(3){animation-delay:0.4s;}@keyframes ftgp-bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}";
+  document.head.appendChild(style);
 
-// Détecte quel(s) programme(s) est concerné par la question
-function detectPrograms(query) {
-  var q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  var detected = [];
-  if (/track.?ia|track.?intelligence|intelligence.?artific|cartographie.?ia|feuillet.?ia|masterclass.?ia|bizdev.?ia|osez.?ia/.test(q)) detected.push("track-ia");
-  if (/hiit|medtech|healthtech|medical|clinique|dispositif.?med|sante.?innov|health.?innov/.test(q)) detected.push("hiit");
-  if (/gen50|50.?ans|senior|agisme|charte.?50|inclusion.?generat/.test(q)) detected.push("gen50tech");
-  if (/ville.?demain|smart.?city|collectivit|metropole.?grand.?paris|mobilite.?urban|logistique.?urban|batiment|amenagement|economie.?circulaire/.test(q)) detected.push("ville-de-demain");
-  if (/scaleup|scale.?up|excellence|nouveau.?programme/.test(q)) detected.push("scaleup-excellence");
-  if (/je.?choisis|achat.?startup|reverse.?pitch|grand.?compte|corporate|axa|sncf|edf/.test(q)) detected.push("je-choisis");
-  if (/tremplin|diversit|egalit|bourse|incub|boursier|qpv|rsa/.test(q)) detected.push("tremplin");
-  if (/central|service.?public|inpi|urssaf|office.?hours|administration/.test(q)) detected.push("central");
-  if (/programme|tous les|liste|quels.?programme|offre/.test(q)) detected.push("programmes");
-  return detected;
-}
+  var html = '<button id="ftgp-chat-btn" title="Assistant FTGP"><svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button><div id="ftgp-chat-box"><div id="ftgp-chat-header">Assistant French Tech Grand Paris<span>Posez vos questions sur nos programmes</span></div><div id="ftgp-chat-messages"><div class="ftgp-msg bot">👋 Bonjour ! Je suis l\'assistant de la <strong>French Tech Grand Paris</strong>.<br>Comment puis-je t\'aider ?</div></div><div id="ftgp-chat-input"><input type="text" id="ftgp-input" placeholder="Pose ta question..." /><button id="ftgp-send">Envoyer</button></div></div>';
+  document.body.insertAdjacentHTML("beforeend", html);
 
-// Scrape une page FTGP et retourne le texte nettoyé
-async function scrapePage(url) {
-  try {
-    var res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FTGP-Bot/1.0)" },
-      signal: AbortSignal.timeout(5000)
-    });
-    if (!res.ok) return null;
-    var html = await res.text();
+  var btn = document.getElementById("ftgp-chat-btn");
+  var box = document.getElementById("ftgp-chat-box");
+  var input = document.getElementById("ftgp-input");
+  var send = document.getElementById("ftgp-send");
+  var messages = document.getElementById("ftgp-chat-messages");
+  var history = [];
+  var sessionId = "session-" + Date.now();
 
-    // Supprimer scripts, styles, nav, footer
-    html = html
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
-      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-      .replace(/<header[\s\S]*?<\/header>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s{2,}/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#[0-9]+;/g, "")
-      .trim();
+  btn.onclick = function() {
+    box.style.display = box.style.display === "flex" ? "none" : "flex";
+    if (box.style.display === "flex") input.focus();
+  };
 
-    // Limiter à 3000 caractères pour ne pas exploser le contexte
-    return html.length > 3000 ? html.substring(0, 3000) + "..." : html;
-  } catch (e) {
-    console.error("Scrape error for " + url + ":", e.message);
-    return null;
+  // Parser Markdown → HTML (gras, italique, liens cliquables, listes)
+  function parseMarkdown(text) {
+    return text
+      // Liens gras+italique : ***[texte](url)***
+      .replace(/\*\*\*\[([^\]]+)\]\(([^)]+)\)\*\*\*/g, '<a href="$2" target="_blank" rel="noopener"><strong><em>$1</em></strong></a>')
+      // Liens gras : **[texte](url)**
+      .replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, '<a href="$2" target="_blank" rel="noopener"><strong>$1</strong></a>')
+      // Liens simples : [texte](url)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      // Gras+italique : ***texte***
+      .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
+      // Gras : **texte**
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      // Italique : *texte*
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+      // Listes à puces : • ou -
+      .replace(/^[•\-]\s+(.+)$/gm, "<li>$1</li>")
+      .replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>")
+      // Sauts de ligne
+      .replace(/\n/g, "<br>");
   }
-}
 
-// RAG statique de fallback
-const STATIC_RAG = {
-  "presentation": {
-    keywords: ["qui", "quoi", "presentation", "french tech", "ftgp", "association", "territoire", "grand paris", "cest quoi"],
-    content: `French Tech Grand Paris : association loi 1901, Communauté labellisée French Tech. Accompagne les startups et PME innovantes du Grand Paris (Paris, Hauts-de-Seine, Seine-Saint-Denis, Val-de-Marne, Essonne, Val-d'Oise, Seine-et-Marne, Yvelines). Site : https://www.frenchtech-grandparis.com | Contact : contact@frenchtechgrandparis.com`
-  },
-  "adhesion": {
-    keywords: ["adhesion", "adherer", "membre", "inscription", "rejoindre", "prix", "tarif", "cout", "avantage", "perk"],
-    content: `Adhésion FTGP annuelle. Accès à tous les programmes, événements exclusifs, réseau membres, visibilité écosystème. Perks : Optivalue.ai (3 mois offerts, 3000€), BPI France (30min expert), Pennylane (2 mois offerts), Brevo (-40%), OVHcloud (support premium 48h). Réduction croisée -50% avec Hub France IA. Adhérer : https://www.frenchtech-grandparis.com/adhesion`
-  },
-  "french-tech-visa": {
-    keywords: ["visa", "french tech visa", "titre sejour", "passeport talent", "etranger", "non europeen", "immigration"],
-    content: `French Tech Visa : Passeport Talent pour talents non-européens rejoignant la tech française. 3 profils : Employés (salaire ≥43 243€, contrat CDI/CDD, entreprise innovante), Fondateurs (projet innovant reconnu), Investisseurs (≥300 000€, ≥30% capital). Durée 4 ans renouvelable. Coût : 225€ + 99€ visa. Citoyens algériens : régime spécifique. Infos : https://www.frenchtech-grandparis.com/ft-programs/ft-visa`
-  },
-  "next40-120": {
-    keywords: ["next40", "french tech 120", "scale-up top", "levee fonds", "100 millions", "promotion annuelle"],
-    content: `French Tech Next40/120 : 120 scale-up françaises les plus performantes accompagnées par l'État. 6e promotion annoncée juin 2025. Candidatures actuellement fermées. Lauréats : Mistral AI, Doctolib, Qonto, Malt, Alan, BackMarket... Plus d'infos : https://lafrenchtech.gouv.fr`
-  },
-  "french-tech-2030": {
-    keywords: ["french tech 2030", "2030", "deeptech", "quantique", "cybersecurite", "spatial", "robotique"],
-    content: `French Tech 2030 : programme pour startups DeepTech stratégiques (IA, cybersécurité, quantique, robotique, spatial). 2e promotion nov 2025, 80 entreprises. Candidatures fermées. Plus d'infos : https://lafrenchtech.gouv.fr`
+  function addMsg(text, role) {
+    var div = document.createElement("div");
+    div.className = "ftgp-msg " + role;
+    if (role === "bot") {
+      div.innerHTML = parseMarkdown(text);
+    } else {
+      div.textContent = text;
+    }
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
   }
-};
 
-function findStaticChunks(query) {
-  var q = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  var scored = Object.values(STATIC_RAG).map(function(chunk) {
-    var score = 0;
-    for (var k = 0; k < chunk.keywords.length; k++) {
-      var kw = chunk.keywords[k].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      if (q.includes(kw)) score += 10;
-    }
-    var qWords = q.split(/\s+/).filter(function(w) { return w.length > 3; });
-    var content = chunk.content.toLowerCase();
-    for (var i = 0; i < qWords.length; i++) {
-      if (content.includes(qWords[i])) score += 2;
-    }
-    return { content: chunk.content, score: score };
-  });
-  return scored
-    .filter(function(c) { return c.score > 0; })
-    .sort(function(a, b) { return b.score - a.score; })
-    .slice(0, 2)
-    .map(function(c) { return c.content; });
-}
+  function addTyping() {
+    var div = document.createElement("div");
+    div.className = "ftgp-msg bot ftgp-typing";
+    div.innerHTML = "<span></span><span></span><span></span>";
+    div.id = "ftgp-typing";
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
 
-const SYSTEM_PROMPT = `Tu es l'assistant officiel de la French Tech Grand Paris — l'asso qui booste les startups du Grand Paris.
+  function removeTyping() {
+    var t = document.getElementById("ftgp-typing");
+    if (t) t.remove();
+  }
 
-TON STYLE :
-- Dynamique, direct, startup-friendly. Zéro corporate, zéro robotique.
-- Phrases courtes et percutantes. Max 3-4 phrases sauf si on demande plus.
-- Tu tutoies naturellement.
-- Verbes d'action : booste, connecte, accélère, rejoins, lance-toi.
-- Quand tu ne sais pas → tu le dis cash et tu renvoies vers le bon contact.
+  function sendMsg() {
+    var msg = input.value.trim();
+    if (!msg) return;
+    input.value = "";
+    addMsg(msg, "user");
+    history.push({ role: "user", content: msg });
+    addTyping();
+    send.disabled = true;
 
-RÈGLES :
-- Réponds UNIQUEMENT en français.
-- N'invente JAMAIS d'information. Utilise uniquement le contexte fourni.
-- Pour les dates, candidatures, événements → précise que l'info peut avoir évolué et renvoie vers le site.
-- Questions hors FTGP → décline poliment et recentre.
-- Ne mentionne pas que tu utilises un "contexte" ou des "documents".
-- CTA en fin de réponse quand pertinent : adhésion (https://www.frenchtech-grandparis.com/adhesion) ou contact (https://www.frenchtech-grandparis.com/contact).
-
-CONTEXTE :
-{context}`;
-
-module.exports = async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  var message = req.body && req.body.message;
-  var session_id = req.body && req.body.session_id;
-  var history = (req.body && req.body.history) || [];
-
-  if (!message) return res.status(400).json({ error: "Message requis" });
-
-  try {
-    // 1. Détecte les programmes concernés
-    var programs = detectPrograms(message);
-
-    // 2. Scrape les pages pertinentes en parallèle
-    var liveContext = "";
-    if (programs.length > 0) {
-      var scrapePromises = programs.slice(0, 2).map(function(p) {
-        return scrapePage(PROGRAM_URLS[p]).then(function(content) {
-          return content ? "=== Contenu live page " + p + " ===\n" + content : null;
-        });
-      });
-      var scrapeResults = await Promise.all(scrapePromises);
-      liveContext = scrapeResults.filter(Boolean).join("\n\n");
-    }
-
-    // 3. RAG statique en complément
-    var staticChunks = findStaticChunks(message);
-    var staticContext = staticChunks.join("\n\n---\n\n");
-
-    // 4. Combine les deux contextes
-    var context = "";
-    if (liveContext) context += "INFORMATIONS EN TEMPS RÉEL DU SITE FTGP :\n" + liveContext + "\n\n";
-    if (staticContext) context += "INFORMATIONS DE BASE :\n" + staticContext;
-    if (!context) context = "Aucune information spécifique trouvée. Réponds de manière générale sur la French Tech Grand Paris.";
-
-    var systemPrompt = SYSTEM_PROMPT.replace("{context}", context);
-
-    var messages = [];
-    var recent = history.slice(-8);
-    for (var i = 0; i < recent.length; i++) {
-      messages.push({ role: recent[i].role, content: recent[i].content });
-    }
-    messages.push({ role: "user", content: message });
-
-    var mistralRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    fetch(VERCEL_URL + "/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + process.env.MISTRAL_API_KEY,
-      },
-      body: JSON.stringify({
-        model: "mistral-small-latest",
-        messages: [{ role: "system", content: systemPrompt }].concat(messages),
-        max_tokens: 600,
-        temperature: 0.4,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg, session_id: sessionId, history: history })
+    }).then(function(res) {
+      return res.json();
+    }).then(function(data) {
+      removeTyping();
+      addMsg(data.reply, "bot");
+      history.push({ role: "assistant", content: data.reply });
+      send.disabled = false;
+    }).catch(function() {
+      removeTyping();
+      addMsg("Oups, problème de connexion. Réessaie ou contacte-nous : contact@frenchtechgrandparis.com", "bot");
+      send.disabled = false;
     });
-
-    if (!mistralRes.ok) {
-      var errText = await mistralRes.text();
-      console.error("Mistral error:", errText);
-      return res.status(200).json({ reply: "Oups, problème technique ! Contacte-nous : contact@frenchtechgrandparis.com" });
-    }
-
-    var data = await mistralRes.json();
-    var reply = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content
-      ? data.choices[0].message.content
-      : "Je n'ai pas pu générer de réponse. Contacte-nous : contact@frenchtechgrandparis.com";
-
-    var sid = session_id || "anon-" + Date.now();
-
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
-      try {
-        var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-        await sb.from("chat_logs").insert({ session_id: sid, question: message, answer: reply });
-      } catch(e) { console.error("Supabase error:", e); }
-    }
-
-    return res.status(200).json({ reply: reply, session_id: sid });
-
-  } catch (error) {
-    console.error("Error:", error);
-    return res.status(200).json({ reply: "Une erreur est survenue. Contacte-nous : contact@frenchtechgrandparis.com" });
   }
-};
+
+  send.onclick = sendMsg;
+  input.addEventListener("keydown", function(e) { if (e.key === "Enter") sendMsg(); });
+})();
+</script>
