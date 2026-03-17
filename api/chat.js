@@ -16,68 +16,110 @@ const PROGRAM_URLS = {
 function detectPrograms(query) {
   var q = query.toLowerCase();
   var detected = [];
-  if (/track.?ia|intelligence.?artific|cartographie.?ia|masterclass.?ia/.test(q)) detected.push("track-ia");
-  if (/hiit|medtech|healthtech|medical|clinique|sante.?innov/.test(q)) detected.push("hiit");
-  if (/gen50|50.?ans|senior|agisme|charte.?50/.test(q)) detected.push("gen50tech");
+  if (/track.?ia|intelligence.?artific|cartographie.?ia|masterclass.?ia|feuillet.?ia/.test(q)) detected.push("track-ia");
+  if (/hiit|medtech|healthtech|medical|clinique|sante.?innov|health.?innov/.test(q)) detected.push("hiit");
+  if (/gen50|50.?ans|senior|agisme|charte.?50|inclusion.?generat/.test(q)) detected.push("gen50tech");
   if (/ville.?demain|smart.?city|collectivit|metropole/.test(q)) detected.push("ville-de-demain");
   if (/scaleup|scale.?up|excellence/.test(q)) detected.push("scaleup-excellence");
-  if (/je.?choisis|reverse.?pitch|grand.?compte/.test(q)) detected.push("je-choisis");
+  if (/je.?choisis|reverse.?pitch|grand.?compte|corporate/.test(q)) detected.push("je-choisis");
   if (/tremplin|diversit|bourse|boursier|qpv|rsa/.test(q)) detected.push("tremplin");
-  if (/central|service.?public|inpi|urssaf/.test(q)) detected.push("central");
-  if (/programme|tous les|liste|accompagnement/.test(q)) detected.push("programmes");
+  if (/central|service.?public|inpi|urssaf|office.?hours/.test(q)) detected.push("central");
+  if (/programme|tous les|liste|accompagnement|quels/.test(q)) detected.push("programmes");
   if (detected.length === 0) detected.push("accueil");
   return detected;
 }
 
+// Scraping propre : extrait uniquement le texte utile
 async function scrapePage(url) {
   try {
     var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 5000);
+    var timeout = setTimeout(function() { controller.abort(); }, 6000);
     var res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; FTGP-Bot/1.0)" },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "fr-FR,fr;q=0.9"
+      },
       signal: controller.signal
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
     var html = await res.text();
+
+    // Supprime tout ce qui n'est pas du contenu utile
     html = html
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
+      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
+      .replace(/<header[\s\S]*?<\/header>/gi, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .replace(/<svg[\s\S]*?<\/svg>/gi, "")
+      .replace(/<img[^>]*>/gi, "")
+      .replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
+
+    // Garde les balises importantes pour la structure
+    html = html
+      .replace(/<h[1-6][^>]*>/gi, "\n## ")
+      .replace(/<\/h[1-6]>/gi, "\n")
+      .replace(/<li[^>]*>/gi, "\n• ")
+      .replace(/<\/li>/gi, "")
+      .replace(/<p[^>]*>/gi, "\n")
+      .replace(/<br[^>]*>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
       .replace(/<[^>]+>/g, " ")
-      .replace(/\s{2,}/g, " ")
       .replace(/&nbsp;/g, " ")
       .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&eacute;/g, "é")
+      .replace(/&egrave;/g, "è")
+      .replace(/&agrave;/g, "à")
+      .replace(/&#[0-9]+;/g, "")
+      .replace(/\s{3,}/g, "\n\n")
       .trim();
-    return html.substring(0, 3000);
+
+    // Garde les 4000 premiers caractères (suffisant pour analyser)
+    return html.length > 4000 ? html.substring(0, 4000) + "\n[...]" : html;
   } catch(e) {
+    console.error("Scrape error " + url + ":", e.message);
     return null;
   }
 }
 
-var SYSTEM_PROMPT = "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n\n" +
-"REGLES ABSOLUES :\n" +
-"- Reponds UNIQUEMENT en francais.\n" +
-"- Tu n'affirmes QUE ce qui est dans le contexte fourni. ZERO invention.\n" +
-"- Si l'info n'est pas dans le contexte : dis-le et renvoie vers https://www.frenchtech-grandparis.com/contact\n" +
-"- Tu ne connais pas l'identite de la personne qui te parle. Si on te demande son nom/poste : reponds que tu n'as pas acces a ces infos.\n" +
-"- Questions hors FTGP : decline poliment.\n\n" +
-"ANALYSE INTELLIGENTE DU CONTEXTE (CRUCIAL) :\n" +
-"- Lis et ANALYSE le contenu du site avant de repondre. Ne te contente pas de le transmettre.\n" +
-"- Si les candidatures sont FERMEES : dis-le clairement, ne donne PAS de lien d'inscription.\n" +
-"- Si une date est PASSEE : signale-le et explique ce qui se passe apres.\n" +
-"- Si un programme est TERMINE ou EN PAUSE : dis-le et propose une alternative (contact, adhesion).\n" +
-"- Si le contenu mentionne 'prochainement', 'a venir', 'bientot' : dis que les infos arrivent bientot.\n" +
-"- Toujours privilegier la VERITE sur le contenu plutot que d'etre serviable avec de fausses infos.\n\n" +
-"TON STYLE :\n" +
-"- Dynamique, direct, startup-friendly. Tu tutoies.\n" +
-"- Phrases courtes. Verbes d'action.\n" +
-"- Max 4 phrases sauf si question complexe.\n\n" +
-"MISE EN FORME :\n" +
-"- **Gras** pour noms de programmes et chiffres cles.\n" +
-"- [texte](url) pour les liens.\n" +
-"- Listes a puces pour 3 elements ou plus.\n" +
-"- CTA en fin : [Adherer](https://www.frenchtech-grandparis.com/adhesion) ou [Nous contacter](https://www.frenchtech-grandparis.com/contact)\n\n" +
-"CONTEXTE DU SITE FTGP (analyse-le intelligemment) :\n{context}";
+var SYSTEM_PROMPT =
+"Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n\n" +
+
+"=== PROCESSUS OBLIGATOIRE AVANT CHAQUE RÉPONSE ===\n" +
+"Tu DOIS suivre ces étapes dans l'ordre :\n" +
+"1. LIS entièrement le contenu de la page fournie dans le contexte.\n" +
+"2. IDENTIFIE les informations clés : dates, statut des candidatures (ouvertes/fermées), conditions, liens.\n" +
+"3. VÉRIFIE : les candidatures sont-elles ouvertes ou fermées ? Y a-t-il une date limite ? Est-elle passée ?\n" +
+"4. SEULEMENT APRÈS cette analyse → formule ta réponse.\n\n" +
+
+"=== RÈGLES ANTI-HALLUCINATION (ABSOLUES) ===\n" +
+"• Tu n'utilises QUE les informations présentes dans le contexte fourni.\n" +
+"• Si les candidatures sont FERMÉES dans le contexte → tu le dis clairement, tu ne donnes PAS de lien d'inscription.\n" +
+"• Si une date est passée → tu le signales clairement.\n" +
+"• Si tu ne trouves pas l'info dans le contexte → tu dis 'Je n'ai pas cette information' et tu renvoies vers https://www.frenchtech-grandparis.com/contact\n" +
+"• Tu ne connais PAS l'identité de la personne. Si on te demande son nom/poste → 'Je n'ai pas accès à ces informations.'\n" +
+"• JAMAIS de suppositions. JAMAIS d'inventions.\n\n" +
+
+"=== TON ET STYLE ===\n" +
+"• Dynamique, direct, startup-friendly. Tu tutoies naturellement.\n" +
+"• Phrases courtes et percutantes.\n" +
+"• Hors périmètre FTGP → tu déclines poliment.\n\n" +
+
+"=== MISE EN FORME ===\n" +
+"• **Gras** pour les noms de programmes et infos importantes.\n" +
+"• Listes à puces (•) pour 3 éléments ou plus.\n" +
+"• Liens cliquables : [texte du lien](url)\n" +
+"• Toujours un CTA en fin de réponse :\n" +
+"  👉 [Adhérer à la FTGP](https://www.frenchtech-grandparis.com/adhesion)\n" +
+"  ou 👉 [Contacter l'équipe](https://www.frenchtech-grandparis.com/contact)\n\n" +
+
+"=== CONTEXTE LIVE DU SITE FTGP (analyse-le en profondeur) ===\n" +
+"{context}";
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -96,15 +138,19 @@ module.exports = async function handler(req, res) {
   try {
     var programs = detectPrograms(message);
     var scrapeResults = [];
-    
+
+    // Scrape en séquentiel pour éviter les timeouts
     for (var i = 0; i < Math.min(programs.length, 2); i++) {
-      var content = await scrapePage(PROGRAM_URLS[programs[i]]);
-      if (content) scrapeResults.push("=== " + PROGRAM_URLS[programs[i]] + " ===\n" + content);
+      var url = PROGRAM_URLS[programs[i]];
+      var content = await scrapePage(url);
+      if (content) {
+        scrapeResults.push("=== CONTENU DE LA PAGE : " + url + " ===\n" + content + "\n=== FIN DE LA PAGE ===");
+      }
     }
 
-    var context = scrapeResults.length > 0 
-      ? scrapeResults.join("\n\n") 
-      : "Aucun contenu recupere. Renvoie vers https://www.frenchtech-grandparis.com/contact";
+    var context = scrapeResults.length > 0
+      ? scrapeResults.join("\n\n")
+      : "Aucun contenu récupéré depuis le site. Renvoie l'utilisateur vers https://www.frenchtech-grandparis.com/contact";
 
     var systemPrompt = SYSTEM_PROMPT.replace("{context}", context);
 
@@ -124,31 +170,31 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: "mistral-small-latest",
         messages: [{ role: "system", content: systemPrompt }].concat(messages),
-        max_tokens: 600,
-        temperature: 0.2
+        max_tokens: 700,
+        temperature: 0 // Zéro créativité = zéro hallucination
       })
     });
 
     if (!mistralRes.ok) {
-      return res.status(200).json({ reply: "Probleme technique. Contacte-nous : contact@frenchtechgrandparis.com" });
+      return res.status(200).json({ reply: "Problème technique momentané. Contacte-nous directement : [contact@frenchtechgrandparis.com](mailto:contact@frenchtechgrandparis.com)" });
     }
 
     var data = await mistralRes.json();
     var reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
       ? data.choices[0].message.content
-      : "Je n'ai pas pu generer de reponse. Contacte-nous : contact@frenchtechgrandparis.com";
+      : "Je n'ai pas pu générer de réponse. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)";
 
     if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
       try {
         var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
         await sb.from("chat_logs").insert({ session_id: session_id, question: message, answer: reply });
-      } catch(e) {}
+      } catch(e) { console.error("Supabase:", e); }
     }
 
     return res.status(200).json({ reply: reply, session_id: session_id });
 
   } catch(error) {
     console.error("Handler error:", error);
-    return res.status(200).json({ reply: "Erreur technique. Contacte-nous : contact@frenchtechgrandparis.com" });
+    return res.status(200).json({ reply: "Erreur technique. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)" });
   }
 };
