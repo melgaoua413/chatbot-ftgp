@@ -54,7 +54,8 @@ async function scrapePage(url) {
 }
 
 var SYSTEM_PROMPT =
-"Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n\n" +
+"Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n" +
+"Aujourd'hui nous sommes le {date}.\n\n" +
 
 "=== PROCESSUS OBLIGATOIRE AVANT CHAQUE RÉPONSE ===\n" +
 "Tu DOIS suivre ces étapes dans l'ordre :\n" +
@@ -114,11 +115,59 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    var context = scrapeResults.length > 0
+    var rawContext = scrapeResults.length > 0
       ? scrapeResults.join("\n\n")
-      : "Aucun contenu récupéré depuis le site. Renvoie l'utilisateur vers https://www.frenchtech-grandparis.com/contact";
+      : null;
 
-    var systemPrompt = SYSTEM_PROMPT.replace("{context}", context);
+    // Date du jour injectée pour éviter les erreurs de temporalité
+    var today = new Date();
+    var dateStr = today.toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+    // ETAPE 1 : Analyse préalable du contenu scrapé (2-pass RAG)
+    var analyzedContext = "";
+    if (rawContext) {
+      var analyzeRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + process.env.MISTRAL_API_KEY
+        },
+        body: JSON.stringify({
+          model: "mistral-large-latest",
+          messages: [{
+            role: "user",
+            content: "Aujourd'hui nous sommes le " + dateStr + ".\n\n" +
+              "Voici le contenu d'une page web. Extrait UNIQUEMENT les faits importants :\n" +
+              "1. Les candidatures sont-elles OUVERTES ou FERMÉES ?\n" +
+              "   → Compare les dates mentionnées avec la date d'aujourd'hui (" + dateStr + ").\n" +
+              "   → Si la date limite est PASSÉE → les candidatures sont FERMÉES.\n" +
+              "   → Si la date limite est FUTURE → les candidatures sont OUVERTES.\n" +
+              "   → Si aucune date → indique ce qui est écrit explicitement sur la page.\n" +
+              "2. Quelles sont les dates importantes mentionnées ?\n" +
+              "3. Quelles sont les conditions d'éligibilité ?\n" +
+              "4. Y a-t-il des liens d'inscription actifs ? (seulement si candidatures ouvertes)\n" +
+              "5. Résume les infos clés du programme en 5-10 points factuels.\n\n" +
+              "IMPORTANT : Ne déduis rien, ne suppose rien. Uniquement ce qui est EXPLICITEMENT écrit.\n\n" +
+              "CONTENU :\n" + rawContext
+          }],
+          max_tokens: 800,
+          temperature: 0
+        })
+      });
+      if (analyzeRes.ok) {
+        var analyzeData = await analyzeRes.json();
+        analyzedContext = analyzeData.choices && analyzeData.choices[0] && analyzeData.choices[0].message
+          ? analyzeData.choices[0].message.content
+          : rawContext;
+      } else {
+        analyzedContext = rawContext;
+      }
+    } else {
+      analyzedContext = "Aucun contenu récupéré depuis le site. Renvoie l'utilisateur vers https://www.frenchtech-grandparis.com/contact";
+    }
+
+    // ETAPE 2 : Génère la réponse finale basée sur l'analyse
+    var systemPrompt = SYSTEM_PROMPT.replace("{context}", analyzedContext).replace("{date}", dateStr);
 
     var messages = [];
     var recent = history.slice(-6);
@@ -134,10 +183,10 @@ module.exports = async function handler(req, res) {
         "Authorization": "Bearer " + process.env.MISTRAL_API_KEY
       },
       body: JSON.stringify({
-        model: "mistral-small-latest",
+        model: "mistral-large-latest",
         messages: [{ role: "system", content: systemPrompt }].concat(messages),
         max_tokens: 700,
-        temperature: 0 // Zéro créativité = zéro hallucination
+        temperature: 0
       })
     });
 
