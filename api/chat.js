@@ -29,64 +29,40 @@ function detectPrograms(query) {
   return detected;
 }
 
-// Scraping via Jina AI — lit le JS rendu, retourne du Markdown propre
+// Scraping via Jina AI — lit le contenu JS rendu, retourne du Markdown propre
 async function scrapePage(url) {
   try {
     var jinaUrl = "https://r.jina.ai/" + url;
     var controller = new AbortController();
     var timeout = setTimeout(function() { controller.abort(); }, 10000);
     var res = await fetch(jinaUrl, {
-      headers: {
-        "Accept": "text/plain",
-        "X-Return-Format": "text"
-      },
+      headers: { "Accept": "text/plain", "X-Return-Format": "text" },
       signal: controller.signal
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
     var text = await res.text();
-    // Garde les 4000 premiers caractères
     return text.length > 4000 ? text.substring(0, 4000) + "\n[...]" : text;
   } catch(e) {
-    console.error("Jina scrape error " + url + ":", e.message);
+    console.error("Jina error " + url + ":", e.message);
     return null;
   }
 }
 
-var SYSTEM_PROMPT =
-"Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n" +
-"Aujourd'hui nous sommes le {date}.\n\n" +
-
-"=== PROCESSUS OBLIGATOIRE AVANT CHAQUE RÉPONSE ===\n" +
-"Tu DOIS suivre ces étapes dans l'ordre :\n" +
-"1. LIS entièrement le contenu de la page fournie dans le contexte.\n" +
-"2. IDENTIFIE les informations clés : dates, statut des candidatures (ouvertes/fermées), conditions, liens.\n" +
-"3. VÉRIFIE : les candidatures sont-elles ouvertes ou fermées ? Y a-t-il une date limite ? Est-elle passée ?\n" +
-"4. SEULEMENT APRÈS cette analyse → formule ta réponse.\n\n" +
-
-"=== RÈGLES ANTI-HALLUCINATION (ABSOLUES) ===\n" +
-"• Tu n'utilises QUE les informations présentes dans le contexte fourni.\n" +
-"• Si les candidatures sont FERMÉES dans le contexte → tu le dis clairement, tu ne donnes PAS de lien d'inscription.\n" +
-"• Si une date est passée → tu le signales clairement.\n" +
-"• Si tu ne trouves pas l'info dans le contexte → tu dis 'Je n'ai pas cette information' et tu renvoies vers https://www.frenchtech-grandparis.com/contact\n" +
-"• Tu ne connais PAS l'identité de la personne. Si on te demande son nom/poste → 'Je n'ai pas accès à ces informations.'\n" +
-"• JAMAIS de suppositions. JAMAIS d'inventions.\n\n" +
-
-"=== TON ET STYLE ===\n" +
-"• Dynamique, direct, startup-friendly. Tu tutoies naturellement.\n" +
-"• Phrases courtes et percutantes.\n" +
-"• Hors périmètre FTGP → tu déclines poliment.\n\n" +
-
-"=== MISE EN FORME ===\n" +
-"• **Gras** pour les noms de programmes et infos importantes.\n" +
-"• Listes à puces (•) pour 3 éléments ou plus.\n" +
-"• Liens cliquables : [texte du lien](url)\n" +
-"• Toujours un CTA en fin de réponse :\n" +
-"  👉 [Adhérer à la FTGP](https://www.frenchtech-grandparis.com/adhesion)\n" +
-"  ou 👉 [Contacter l'équipe](https://www.frenchtech-grandparis.com/contact)\n\n" +
-
-"=== CONTEXTE LIVE DU SITE FTGP (analyse-le en profondeur) ===\n" +
-"{context}";
+// Génère un contexte temporel complet
+function getTemporalContext() {
+  var now = new Date();
+  var days = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+  var months = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  return {
+    full: days[now.getDay()] + " " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear(),
+    day: now.getDate(),
+    month: now.getMonth() + 1,
+    monthName: months[now.getMonth()],
+    year: now.getFullYear(),
+    iso: now.toISOString().split("T")[0]
+  };
+}
 
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -103,27 +79,19 @@ module.exports = async function handler(req, res) {
   if (!message) return res.status(400).json({ error: "Message requis" });
 
   try {
+    var date = getTemporalContext();
     var programs = detectPrograms(message);
     var scrapeResults = [];
 
-    // Scrape en séquentiel pour éviter les timeouts
     for (var i = 0; i < Math.min(programs.length, 2); i++) {
       var url = PROGRAM_URLS[programs[i]];
       var content = await scrapePage(url);
-      if (content) {
-        scrapeResults.push("=== CONTENU DE LA PAGE : " + url + " ===\n" + content + "\n=== FIN DE LA PAGE ===");
-      }
+      if (content) scrapeResults.push("=== PAGE : " + url + " ===\n" + content + "\n=== FIN ===");
     }
 
-    var rawContext = scrapeResults.length > 0
-      ? scrapeResults.join("\n\n")
-      : null;
+    var rawContext = scrapeResults.length > 0 ? scrapeResults.join("\n\n") : null;
 
-    // Date du jour injectée pour éviter les erreurs de temporalité
-    var today = new Date();
-    var dateStr = today.toLocaleDateString("fr-FR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-
-    // ETAPE 1 : Analyse préalable du contenu scrapé (2-pass RAG)
+    // PASSE 1 — Analyse intelligente du contenu + conscience temporelle
     var analyzedContext = "";
     if (rawContext) {
       var analyzeRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
@@ -136,24 +104,29 @@ module.exports = async function handler(req, res) {
           model: "mistral-large-latest",
           messages: [{
             role: "user",
-            content: "Aujourd'hui nous sommes le " + dateStr + ".\n\n" +
-              "Voici le contenu d'une page web. Extrait UNIQUEMENT les faits importants :\n" +
-              "1. Les candidatures sont-elles OUVERTES ou FERMÉES ?\n" +
-              "   → Compare les dates mentionnées avec la date d'aujourd'hui (" + dateStr + ").\n" +
-              "   → Si la date limite est PASSÉE → les candidatures sont FERMÉES.\n" +
-              "   → Si la date limite est FUTURE → les candidatures sont OUVERTES.\n" +
-              "   → Si aucune date → indique ce qui est écrit explicitement sur la page.\n" +
-              "2. Quelles sont les dates importantes mentionnées ?\n" +
-              "3. Quelles sont les conditions d'éligibilité ?\n" +
-              "4. Y a-t-il des liens d'inscription actifs ? (seulement si candidatures ouvertes)\n" +
-              "5. Résume les infos clés du programme en 5-10 points factuels.\n\n" +
-              "IMPORTANT : Ne déduis rien, ne suppose rien. Uniquement ce qui est EXPLICITEMENT écrit.\n\n" +
-              "CONTENU :\n" + rawContext
+            content:
+              "=== DATE D'AUJOURD'HUI ===\n" +
+              "Nous sommes le " + date.full + " (année " + date.year + ", mois " + date.month + ").\n\n" +
+              "=== TA MISSION ===\n" +
+              "Analyse ce contenu de page web et réponds à ces questions avec une précision absolue :\n\n" +
+              "1. STATUT DES CANDIDATURES :\n" +
+              "   - Cherche tous les mots liés aux candidatures : 'ouvertes', 'fermées', 'closes', 'terminées', 'prochainement', 'postuler', 'candidater'.\n" +
+              "   - Si une DATE LIMITE est mentionnée : compare-la avec aujourd'hui (" + date.full + ").\n" +
+              "   - Si la date limite est AVANT " + date.full + " → candidatures FERMÉES.\n" +
+              "   - Si la date limite est APRÈS " + date.full + " → candidatures OUVERTES.\n" +
+              "   - Conclusion obligatoire : OUVERTES ou FERMÉES ?\n\n" +
+              "2. DATES IMPORTANTES : Liste toutes les dates mentionnées et précise si elles sont passées ou à venir par rapport à aujourd'hui.\n\n" +
+              "3. CONDITIONS D'ÉLIGIBILITÉ : Qui peut candidater ? Quels critères ?\n\n" +
+              "4. LIENS : Y a-t-il des liens d'inscription ? (Ne les inclure QUE si candidatures ouvertes)\n\n" +
+              "5. RÉSUMÉ FACTUEL : 5-10 points clés du programme.\n\n" +
+              "RÈGLE ABSOLUE : N'invente rien. Ne suppose rien. Uniquement ce qui est EXPLICITEMENT dans le texte.\n\n" +
+              "=== CONTENU DE LA PAGE ===\n" + rawContext
           }],
-          max_tokens: 800,
+          max_tokens: 1000,
           temperature: 0
         })
       });
+
       if (analyzeRes.ok) {
         var analyzeData = await analyzeRes.json();
         analyzedContext = analyzeData.choices && analyzeData.choices[0] && analyzeData.choices[0].message
@@ -163,11 +136,31 @@ module.exports = async function handler(req, res) {
         analyzedContext = rawContext;
       }
     } else {
-      analyzedContext = "Aucun contenu récupéré depuis le site. Renvoie l'utilisateur vers https://www.frenchtech-grandparis.com/contact";
+      analyzedContext = "Aucun contenu récupéré. Renvoie vers https://www.frenchtech-grandparis.com/contact";
     }
 
-    // ETAPE 2 : Génère la réponse finale basée sur l'analyse
-    var systemPrompt = SYSTEM_PROMPT.replace("{context}", analyzedContext).replace("{date}", dateStr);
+    // PASSE 2 — Génère la réponse finale
+    var systemPrompt =
+      "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n" +
+      "Aujourd'hui nous sommes le " + date.full + ".\n\n" +
+      "=== RÈGLES ABSOLUES ===\n" +
+      "• Tu n'utilises QUE les informations de l'analyse fournie ci-dessous.\n" +
+      "• ZERO invention. ZERO supposition.\n" +
+      "• Si candidatures FERMÉES → tu le dis clairement, tu ne donnes PAS de lien d'inscription.\n" +
+      "• Si candidatures OUVERTES → tu donnes les infos et le lien.\n" +
+      "• Si tu ne sais pas → renvoie vers https://www.frenchtech-grandparis.com/contact\n" +
+      "• Tu ne connais pas l'identité de la personne. Si on te demande son nom/poste → 'Je n'ai pas accès à ces informations.'\n" +
+      "• Questions hors FTGP → décline poliment.\n\n" +
+      "=== STYLE ===\n" +
+      "• Dynamique, direct, startup-friendly. Tu tutoies.\n" +
+      "• Phrases courtes et percutantes.\n\n" +
+      "=== MISE EN FORME ===\n" +
+      "• **Gras** pour les infos importantes.\n" +
+      "• Listes à puces pour 3 éléments ou plus.\n" +
+      "• Liens cliquables : [texte](url)\n" +
+      "• CTA en fin : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion) ou 👉 [Contacter l'équipe](https://www.frenchtech-grandparis.com/contact)\n\n" +
+      "=== ANALYSE DE LA PAGE (BASE-TOI UNIQUEMENT SUR ÇA) ===\n" +
+      analyzedContext;
 
     var messages = [];
     var recent = history.slice(-6);
@@ -191,7 +184,7 @@ module.exports = async function handler(req, res) {
     });
 
     if (!mistralRes.ok) {
-      return res.status(200).json({ reply: "Problème technique momentané. Contacte-nous directement : [contact@frenchtechgrandparis.com](mailto:contact@frenchtechgrandparis.com)" });
+      return res.status(200).json({ reply: "Problème technique. Contacte-nous : [contact@frenchtechgrandparis.com](mailto:contact@frenchtechgrandparis.com)" });
     }
 
     var data = await mistralRes.json();
