@@ -29,60 +29,26 @@ function detectPrograms(query) {
   return detected;
 }
 
-// Scraping propre : extrait uniquement le texte utile
+// Scraping via Jina AI — lit le JS rendu, retourne du Markdown propre
 async function scrapePage(url) {
   try {
+    var jinaUrl = "https://r.jina.ai/" + url;
     var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 6000);
-    var res = await fetch(url, {
+    var timeout = setTimeout(function() { controller.abort(); }, 10000);
+    var res = await fetch(jinaUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "fr-FR,fr;q=0.9"
+        "Accept": "text/plain",
+        "X-Return-Format": "text"
       },
       signal: controller.signal
     });
     clearTimeout(timeout);
     if (!res.ok) return null;
-    var html = await res.text();
-
-    // Supprime tout ce qui n'est pas du contenu utile
-    html = html
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<nav[\s\S]*?<\/nav>/gi, "")
-      .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-      .replace(/<header[\s\S]*?<\/header>/gi, "")
-      .replace(/<!--[\s\S]*?-->/g, "")
-      .replace(/<svg[\s\S]*?<\/svg>/gi, "")
-      .replace(/<img[^>]*>/gi, "")
-      .replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
-
-    // Garde les balises importantes pour la structure
-    html = html
-      .replace(/<h[1-6][^>]*>/gi, "\n## ")
-      .replace(/<\/h[1-6]>/gi, "\n")
-      .replace(/<li[^>]*>/gi, "\n• ")
-      .replace(/<\/li>/gi, "")
-      .replace(/<p[^>]*>/gi, "\n")
-      .replace(/<br[^>]*>/gi, "\n")
-      .replace(/<\/p>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&eacute;/g, "é")
-      .replace(/&egrave;/g, "è")
-      .replace(/&agrave;/g, "à")
-      .replace(/&#[0-9]+;/g, "")
-      .replace(/\s{3,}/g, "\n\n")
-      .trim();
-
-    // Garde les 4000 premiers caractères (suffisant pour analyser)
-    return html.length > 4000 ? html.substring(0, 4000) + "\n[...]" : html;
+    var text = await res.text();
+    // Garde les 4000 premiers caractères
+    return text.length > 4000 ? text.substring(0, 4000) + "\n[...]" : text;
   } catch(e) {
-    console.error("Scrape error " + url + ":", e.message);
+    console.error("Jina scrape error " + url + ":", e.message);
     return null;
   }
 }
