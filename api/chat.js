@@ -1,208 +1,258 @@
 const { createClient } = require("@supabase/supabase-js");
 
+// ─── URLS DES PAGES FTGP ───────────────────────────────────────────────────
 const PROGRAM_URLS = {
-  "track-ia": "https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle",
-  "hiit": "https://www.frenchtech-grandparis.com/ft-programs/hiit",
-  "gen50tech": "https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis",
-  "ville-de-demain": "https://www.frenchtech-grandparis.com/ft-programs/ville-de-demain",
-  "scaleup-excellence": "https://www.frenchtech-grandparis.com/ft-programs/scale-up-excellence",
-  "je-choisis": "https://www.frenchtech-grandparis.com/ft-programs/je-choisis-la-french-tech",
-  "tremplin": "https://www.frenchtech-grandparis.com/ft-programs/french-tech-tremplin",
-  "central": "https://www.frenchtech-grandparis.com/ft-programs/french-tech-central",
-  "programmes": "https://www.frenchtech-grandparis.com/programmes",
-  "accueil": "https://www.frenchtech-grandparis.com"
+  "track-ia":          "https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle",
+  "hiit":              "https://www.frenchtech-grandparis.com/ft-programs/hiit",
+  "gen50tech":         "https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis",
+  "ville-de-demain":   "https://www.frenchtech-grandparis.com/ft-programs/ville-de-demain",
+  "scaleup":           "https://www.frenchtech-grandparis.com/ft-programs/scale-up-excellence",
+  "je-choisis":        "https://www.frenchtech-grandparis.com/ft-programs/je-choisis-la-french-tech",
+  "tremplin":          "https://www.frenchtech-grandparis.com/ft-programs/french-tech-tremplin",
+  "central":           "https://www.frenchtech-grandparis.com/ft-programs/french-tech-central",
+  "programmes":        "https://www.frenchtech-grandparis.com/programmes",
+  "adhesion":          "https://www.frenchtech-grandparis.com/adhesion",
+  "accueil":           "https://www.frenchtech-grandparis.com"
 };
 
-function detectPrograms(query) {
-  var q = query.toLowerCase();
-  var detected = [];
-  if (/track.?ia|intelligence.?artific|cartographie.?ia|masterclass.?ia|feuillet.?ia/.test(q)) detected.push("track-ia");
-  if (/hiit|medtech|healthtech|medical|clinique|sante.?innov|health.?innov/.test(q)) detected.push("hiit");
-  if (/gen50|50.?ans|senior|agisme|charte.?50|inclusion.?generat/.test(q)) detected.push("gen50tech");
-  if (/ville.?demain|smart.?city|collectivit|metropole/.test(q)) detected.push("ville-de-demain");
-  if (/scaleup|scale.?up|excellence/.test(q)) detected.push("scaleup-excellence");
-  if (/je.?choisis|reverse.?pitch|grand.?compte|corporate/.test(q)) detected.push("je-choisis");
-  if (/tremplin|diversit|bourse|boursier|qpv|rsa/.test(q)) detected.push("tremplin");
-  if (/central|service.?public|inpi|urssaf|office.?hours/.test(q)) detected.push("central");
-  if (/programme|tous les|liste|accompagnement|quels/.test(q)) detected.push("programmes");
-  if (detected.length === 0) detected.push("accueil");
-  return detected;
-}
-
-// Scraping via Jina AI — lit le contenu JS rendu, retourne du Markdown propre
-async function scrapePage(url) {
-  try {
-    var jinaUrl = "https://r.jina.ai/" + url;
-    var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 10000);
-    var res = await fetch(jinaUrl, {
-      headers: { "Accept": "text/plain", "X-Return-Format": "text" },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    if (!res.ok) return null;
-    var text = await res.text();
-    return text.length > 4000 ? text.substring(0, 4000) + "\n[...]" : text;
-  } catch(e) {
-    console.error("Jina error " + url + ":", e.message);
-    return null;
-  }
-}
-
-// Génère un contexte temporel complet
-function getTemporalContext() {
+// ─── DATE DU JOUR ──────────────────────────────────────────────────────────
+function getToday() {
   var now = new Date();
   var days = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
   var months = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
   return {
-    full: days[now.getDay()] + " " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear(),
-    day: now.getDate(),
+    full:  days[now.getDay()] + " " + now.getDate() + " " + months[now.getMonth()] + " " + now.getFullYear(),
+    day:   now.getDate(),
     month: now.getMonth() + 1,
-    monthName: months[now.getMonth()],
-    year: now.getFullYear(),
-    iso: now.toISOString().split("T")[0]
+    year:  now.getFullYear(),
+    iso:   now.toISOString().split("T")[0]
   };
 }
 
+// ─── SCRAPING VIA JINA AI ──────────────────────────────────────────────────
+async function scrapePage(url) {
+  try {
+    var controller = new AbortController();
+    var t = setTimeout(function() { controller.abort(); }, 10000);
+    var res = await fetch("https://r.jina.ai/" + url, {
+      headers: { "Accept": "text/plain", "X-Return-Format": "text" },
+      signal: controller.signal
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    var text = await res.text();
+    return text.length > 5000 ? text.substring(0, 5000) + "\n[tronqué]" : text;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ─── ÉTAPE 1 : ROUTER — classe la question et choisit la source ─────────────
+async function routeQuestion(question, apiKey, today) {
+  var res = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+    body: JSON.stringify({
+      model: "mistral-large-latest",
+      messages: [{
+        role: "user",
+        content:
+          "Tu es un router. Aujourd'hui : " + today.full + ".\n" +
+          "Analyse cette question et retourne UNIQUEMENT un JSON valide (aucun texte autour) :\n\n" +
+          "Question : \"" + question + "\"\n\n" +
+          "Retourne ce JSON :\n" +
+          "{\n" +
+          "  \"intent\": \"programme\" | \"adhesion\" | \"contact\" | \"hors_sujet\" | \"general\",\n" +
+          "  \"programs\": [liste des programmes concernés parmi : track-ia, hiit, gen50tech, ville-de-demain, scaleup, je-choisis, tremplin, central, programmes, adhesion, accueil],\n" +
+          "  \"needs_live_data\": true | false,\n" +
+          "  \"can_answer\": true | false\n" +
+          "}\n\n" +
+          "Règles :\n" +
+          "- needs_live_data = true si la question porte sur des dates, candidatures, événements, inscriptions.\n" +
+          "- can_answer = false si la question est hors sujet FTGP ou sur l'identité de l'utilisateur.\n" +
+          "- programs = [] si non applicable.\n" +
+          "Retourne UNIQUEMENT le JSON, rien d'autre."
+      }],
+      max_tokens: 200,
+      temperature: 0
+    })
+  });
+  if (!res.ok) return { intent: "general", programs: ["accueil"], needs_live_data: true, can_answer: true };
+  var data = await res.json();
+  var text = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : "{}";
+  try {
+    // Nettoie les backticks éventuels
+    text = text.replace(/```json|```/g, "").trim();
+    return JSON.parse(text);
+  } catch(e) {
+    return { intent: "general", programs: ["accueil"], needs_live_data: true, can_answer: true };
+  }
+}
+
+// ─── ÉTAPE 2 : RETRIEVAL — scrape les pages pertinentes ────────────────────
+async function retrieveSources(programs) {
+  var sources = [];
+  var targets = programs.length > 0 ? programs : ["accueil"];
+  for (var i = 0; i < Math.min(targets.length, 3); i++) {
+    var url = PROGRAM_URLS[targets[i]];
+    if (!url) continue;
+    var content = await scrapePage(url);
+    if (content) sources.push({ url: url, content: content });
+  }
+  return sources;
+}
+
+// ─── ÉTAPE 3 : ANALYSE — extrait les faits clés avec conscience temporelle ─
+async function analyzeSources(sources, question, today, apiKey) {
+  if (sources.length === 0) return null;
+  var sourceText = sources.map(function(s) {
+    return "=== SOURCE : " + s.url + " ===\n" + s.content + "\n=== FIN SOURCE ===";
+  }).join("\n\n");
+
+  var res = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+    body: JSON.stringify({
+      model: "mistral-large-latest",
+      messages: [{
+        role: "user",
+        content:
+          "DATE AUJOURD'HUI : " + today.full + " (iso: " + today.iso + ")\n\n" +
+          "QUESTION POSÉE : \"" + question + "\"\n\n" +
+          "Analyse ces sources et extrait UNIQUEMENT les faits pertinents pour répondre à la question.\n\n" +
+          "Pour CHAQUE fait extrait :\n" +
+          "1. Cite l'URL source exacte.\n" +
+          "2. Cite l'extrait exact du texte source.\n" +
+          "3. Indique si l'info est CERTAINE (écrit explicitement) ou INCERTAINE (déduit).\n\n" +
+          "ANALYSE TEMPORELLE OBLIGATOIRE :\n" +
+          "- Si une date est mentionnée, compare-la avec aujourd'hui (" + today.full + ").\n" +
+          "- Une date limite AVANT " + today.iso + " = PASSÉE → candidatures/événement TERMINÉ.\n" +
+          "- Une date limite APRÈS " + today.iso + " = FUTURE → candidatures/événement EN COURS.\n" +
+          "- Si le mot 'fermées', 'closes', 'terminées' apparaît → candidatures FERMÉES.\n" +
+          "- Si le mot 'ouvertes', 'postuler', 'candidater' apparaît → VÉRIFIE la date avant de conclure.\n\n" +
+          "Si aucune information pertinente trouvée → réponds 'AUCUNE SOURCE PERTINENTE'.\n\n" +
+          "SOURCES :\n" + sourceText
+      }],
+      max_tokens: 1200,
+      temperature: 0
+    })
+  });
+  if (!res.ok) return null;
+  var data = await res.json();
+  return data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
+}
+
+// ─── ÉTAPE 4 : GÉNÉRATION FINALE ───────────────────────────────────────────
+async function generateAnswer(question, analysis, sources, history, today, apiKey, intent) {
+  var sourceUrls = sources.map(function(s) { return s.url; }).join(", ");
+
+  var systemPrompt =
+    "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n" +
+    "Aujourd'hui : " + today.full + ".\n\n" +
+
+    "=== RÈGLES ABSOLUES ===\n" +
+    "• Tu réponds UNIQUEMENT à partir de l'analyse fournie ci-dessous.\n" +
+    "• Si l'analyse dit 'AUCUNE SOURCE PERTINENTE' → réponds : 'Je n'ai pas trouvé cette information sur le site FTGP. Contacte directement l'équipe 👉 [ici](https://www.frenchtech-grandparis.com/contact)'\n" +
+    "• JAMAIS d'invention. JAMAIS de complétion avec ta connaissance générale.\n" +
+    "• Si candidatures FERMÉES → dis-le clairement, AUCUN lien d'inscription.\n" +
+    "• Si candidatures OUVERTES → donne les infos et le lien.\n" +
+    "• Si tu n'es pas sûr → dis-le et renvoie vers le contact.\n" +
+    "• Tu ne connais PAS l'identité de la personne. Si on demande son nom/poste → 'Je n'ai pas accès à ces informations.'\n" +
+    "• Hors sujet FTGP → décline poliment.\n\n" +
+
+    "=== STYLE ===\n" +
+    "• Dynamique, direct, startup-friendly. Tu tutoies.\n" +
+    "• Phrases courtes et percutantes.\n\n" +
+
+    "=== MISE EN FORME ===\n" +
+    "• **Gras** pour les infos clés.\n" +
+    "• Listes à puces (•) pour 3 éléments ou plus.\n" +
+    "• Liens : [texte](url)\n" +
+    "• CTA en fin : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion) ou 👉 [Contacter l'équipe](https://www.frenchtech-grandparis.com/contact)\n\n" +
+
+    "=== ANALYSE VÉRIFIÉE (base-toi UNIQUEMENT sur ça) ===\n" +
+    (analysis || "Aucune source pertinente trouvée.") + "\n\n" +
+    "Sources consultées : " + (sourceUrls || "aucune");
+
+  var messages = history.slice(-6).map(function(m) {
+    return { role: m.role, content: m.content };
+  });
+  messages.push({ role: "user", content: question });
+
+  var res = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+    body: JSON.stringify({
+      model: "mistral-large-latest",
+      messages: [{ role: "system", content: systemPrompt }].concat(messages),
+      max_tokens: 700,
+      temperature: 0
+    })
+  });
+
+  if (!res.ok) return "Problème technique. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)";
+  var data = await res.json();
+  return data.choices && data.choices[0] && data.choices[0].message
+    ? data.choices[0].message.content
+    : "Je n'ai pas pu générer de réponse. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)";
+}
+
+// ─── HANDLER PRINCIPAL ─────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  var message = req.body && req.body.message;
-  var session_id = (req.body && req.body.session_id) || ("anon-" + Date.now());
-  var history = (req.body && req.body.history) || [];
+  var message  = req.body && req.body.message;
+  var sid      = (req.body && req.body.session_id) || ("anon-" + Date.now());
+  var history  = (req.body && req.body.history) || [];
+  var apiKey   = process.env.MISTRAL_API_KEY;
 
   if (!message) return res.status(400).json({ error: "Message requis" });
 
   try {
-    var date = getTemporalContext();
-    var programs = detectPrograms(message);
-    var scrapeResults = [];
+    var today = getToday();
 
-    for (var i = 0; i < Math.min(programs.length, 2); i++) {
-      var url = PROGRAM_URLS[programs[i]];
-      var content = await scrapePage(url);
-      if (content) scrapeResults.push("=== PAGE : " + url + " ===\n" + content + "\n=== FIN ===");
-    }
+    // ÉTAPE 1 — Router
+    var route = await routeQuestion(message, apiKey, today);
 
-    var rawContext = scrapeResults.length > 0 ? scrapeResults.join("\n\n") : null;
-
-    // PASSE 1 — Analyse intelligente du contenu + conscience temporelle
-    var analyzedContext = "";
-    if (rawContext) {
-      var analyzeRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + process.env.MISTRAL_API_KEY
-        },
-        body: JSON.stringify({
-          model: "mistral-large-latest",
-          messages: [{
-            role: "user",
-            content:
-              "=== DATE D'AUJOURD'HUI ===\n" +
-              "Nous sommes le " + date.full + " (année " + date.year + ", mois " + date.month + ").\n\n" +
-              "=== TA MISSION ===\n" +
-              "Analyse ce contenu de page web et réponds à ces questions avec une précision absolue :\n\n" +
-              "1. STATUT DES CANDIDATURES :\n" +
-              "   - Cherche tous les mots liés aux candidatures : 'ouvertes', 'fermées', 'closes', 'terminées', 'prochainement', 'postuler', 'candidater'.\n" +
-              "   - Si une DATE LIMITE est mentionnée : compare-la avec aujourd'hui (" + date.full + ").\n" +
-              "   - Si la date limite est AVANT " + date.full + " → candidatures FERMÉES.\n" +
-              "   - Si la date limite est APRÈS " + date.full + " → candidatures OUVERTES.\n" +
-              "   - Conclusion obligatoire : OUVERTES ou FERMÉES ?\n\n" +
-              "2. DATES IMPORTANTES : Liste toutes les dates mentionnées et précise si elles sont passées ou à venir par rapport à aujourd'hui.\n\n" +
-              "3. CONDITIONS D'ÉLIGIBILITÉ : Qui peut candidater ? Quels critères ?\n\n" +
-              "4. LIENS : Y a-t-il des liens d'inscription ? (Ne les inclure QUE si candidatures ouvertes)\n\n" +
-              "5. RÉSUMÉ FACTUEL : 5-10 points clés du programme.\n\n" +
-              "RÈGLE ABSOLUE : N'invente rien. Ne suppose rien. Uniquement ce qui est EXPLICITEMENT dans le texte.\n\n" +
-              "=== CONTENU DE LA PAGE ===\n" + rawContext
-          }],
-          max_tokens: 1000,
-          temperature: 0
-        })
+    // Si hors sujet → réponse immédiate
+    if (!route.can_answer) {
+      return res.status(200).json({
+        reply: "Je suis uniquement formé sur les programmes et l'écosystème de la **French Tech Grand Paris**. Pour toute autre question, contacte l'équipe 👉 [ici](https://www.frenchtech-grandparis.com/contact)",
+        session_id: sid
       });
-
-      if (analyzeRes.ok) {
-        var analyzeData = await analyzeRes.json();
-        analyzedContext = analyzeData.choices && analyzeData.choices[0] && analyzeData.choices[0].message
-          ? analyzeData.choices[0].message.content
-          : rawContext;
-      } else {
-        analyzedContext = rawContext;
-      }
-    } else {
-      analyzedContext = "Aucun contenu récupéré. Renvoie vers https://www.frenchtech-grandparis.com/contact";
     }
 
-    // PASSE 2 — Génère la réponse finale
-    var systemPrompt =
-      "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP).\n" +
-      "Aujourd'hui nous sommes le " + date.full + ".\n\n" +
-      "=== RÈGLES ABSOLUES ===\n" +
-      "• Tu n'utilises QUE les informations de l'analyse fournie ci-dessous.\n" +
-      "• ZERO invention. ZERO supposition.\n" +
-      "• Si candidatures FERMÉES → tu le dis clairement, tu ne donnes PAS de lien d'inscription.\n" +
-      "• Si candidatures OUVERTES → tu donnes les infos et le lien.\n" +
-      "• Si tu ne sais pas → renvoie vers https://www.frenchtech-grandparis.com/contact\n" +
-      "• Tu ne connais pas l'identité de la personne. Si on te demande son nom/poste → 'Je n'ai pas accès à ces informations.'\n" +
-      "• Questions hors FTGP → décline poliment.\n\n" +
-      "=== STYLE ===\n" +
-      "• Dynamique, direct, startup-friendly. Tu tutoies.\n" +
-      "• Phrases courtes et percutantes.\n\n" +
-      "=== MISE EN FORME ===\n" +
-      "• **Gras** pour les infos importantes.\n" +
-      "• Listes à puces pour 3 éléments ou plus.\n" +
-      "• Liens cliquables : [texte](url)\n" +
-      "• CTA en fin : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion) ou 👉 [Contacter l'équipe](https://www.frenchtech-grandparis.com/contact)\n\n" +
-      "=== ANALYSE DE LA PAGE (BASE-TOI UNIQUEMENT SUR ÇA) ===\n" +
-      analyzedContext;
-
-    var messages = [];
-    var recent = history.slice(-6);
-    for (var j = 0; j < recent.length; j++) {
-      messages.push({ role: recent[j].role, content: recent[j].content });
-    }
-    messages.push({ role: "user", content: message });
-
-    var mistralRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + process.env.MISTRAL_API_KEY
-      },
-      body: JSON.stringify({
-        model: "mistral-large-latest",
-        messages: [{ role: "system", content: systemPrompt }].concat(messages),
-        max_tokens: 700,
-        temperature: 0
-      })
-    });
-
-    if (!mistralRes.ok) {
-      return res.status(200).json({ reply: "Problème technique. Contacte-nous : [contact@frenchtechgrandparis.com](mailto:contact@frenchtechgrandparis.com)" });
+    // ÉTAPE 2 — Retrieval
+    var sources = [];
+    if (route.needs_live_data || route.intent === "programme") {
+      sources = await retrieveSources(route.programs);
     }
 
-    var data = await mistralRes.json();
-    var reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-      ? data.choices[0].message.content
-      : "Je n'ai pas pu générer de réponse. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)";
+    // ÉTAPE 3 — Analyse avec conscience temporelle
+    var analysis = await analyzeSources(sources, message, today, apiKey);
 
+    // ÉTAPE 4 — Génération finale
+    var reply = await generateAnswer(message, analysis, sources, history, today, apiKey, route.intent);
+
+    // Log Supabase
     if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
       try {
         var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-        await sb.from("chat_logs").insert({ session_id: session_id, question: message, answer: reply });
-      } catch(e) { console.error("Supabase:", e); }
+        await sb.from("chat_logs").insert({ session_id: sid, question: message, answer: reply });
+      } catch(e) {}
     }
 
-    return res.status(200).json({ reply: reply, session_id: session_id });
+    return res.status(200).json({ reply: reply, session_id: sid });
 
-  } catch(error) {
-    console.error("Handler error:", error);
-    return res.status(200).json({ reply: "Erreur technique. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)" });
+  } catch(err) {
+    console.error("Handler error:", err);
+    return res.status(200).json({
+      reply: "Erreur technique. Contacte-nous : [ici](https://www.frenchtech-grandparis.com/contact)",
+      session_id: sid
+    });
   }
 };
