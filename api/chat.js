@@ -182,9 +182,10 @@ module.exports = async function handler(req, res) {
 
     // Log non-bloquant
     if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
-      createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
-        .from("chat_logs").insert({ session_id:sid, question:message, answer:reply })
-        .catch(function(){});
+      try {
+        var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+        sb.from("chat_logs").insert({ session_id:sid, question:message, answer:reply });
+      } catch(e) { console.error("Supabase log error:", e); }
     }
 
     return res.status(200).json({ reply:reply, session_id:sid });
