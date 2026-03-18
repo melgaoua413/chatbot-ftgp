@@ -248,7 +248,6 @@ module.exports = async function handler(req, res) {
       "  Ne jamais écrire # ## ### --- *** au sens littéral.\n"+
       "  Pour structurer : utilise des sauts de ligne, des tirets •, et du **gras** uniquement.\n"+
       "• Structure visuelle : titres en **gras**, listes avec •, blocs séparés par sauts de ligne.\n"+
-      "• IMPORTANT : tN'utilise JAMAIS l'abréviation FTGP. TOUJOURS dire French tech Grand Paris.\n"+
       "• Liens : [texte actionnable](url)\n"+
       "• CTA final si pertinent : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion)\n"+
       "• Si tu ne sais vraiment pas → ##INCONNU## à la fin.\n"+
