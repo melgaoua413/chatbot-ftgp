@@ -86,7 +86,7 @@ function chunkText(text, maxChars) {
 // Embedding via Hugging Face (gratuit)
 async function getEmbedding(text) {
   var res = await fetch(
-    "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "https://router.huggingface.co/hf-inference/pipeline/feature-extraction/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     {
       method: "POST",
       headers: {
