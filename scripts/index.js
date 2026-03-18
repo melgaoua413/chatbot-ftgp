@@ -2,11 +2,10 @@ const { createClient } = require("@supabase/supabase-js");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
-const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+const HF_TOKEN = process.env.HF_TOKEN;
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ─── TOUS TES RAGS ────────────────────────────────────────────────────────
 const DOCUMENTS = [
   {
     title: "French Tech Grand Paris — Présentation générale",
@@ -16,17 +15,17 @@ const DOCUMENTS = [
   {
     title: "Track IA — Programme IA French Tech Grand Paris",
     url: "https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle",
-    content: `Track IA est le programme d'accompagnement continu pour startups et scale-ups IA de la French Tech Grand Paris. Objectifs : accélérer les startups IA prometteuses, faciliter l'accès aux financements, créer des opportunités BizDev, structurer la montée en compétence. Formats : Ateliers thématiques, Masterclass IA, Feuillets IA, Soirées BizDev Find Your Prospect, Cartographie IA (visibilité auprès de +150 grands groupes, 50 ETI, +100 investisseurs), événements salons. Éligibilité : startups avec IA au cœur du produit, adhérentes FTGP. Pas besoin de clients, early stage accepté. Coût : inclus dans l'adhésion FTGP. Programme continu, pas de promotion annuelle. FTGP est ambassadrice du plan national Osez l'IA. Candidature : https://npammhndz0r.typeform.com/to/A1cmwNFi Contact éligibilité : melissa@frenchtech-grandparis.fr`
+    content: `Track IA est le programme d'accompagnement continu pour startups et scale-ups IA de la French Tech Grand Paris. Objectifs : accélérer les startups IA prometteuses, faciliter l'accès aux financements, créer des opportunités BizDev, structurer la montée en compétence. Formats : Ateliers thématiques, Masterclass IA, Feuillets IA, Soirées BizDev Find Your Prospect, Cartographie IA visibilité auprès de plus de 150 grands groupes 50 ETI et plus de 100 investisseurs, événements salons. Éligibilité : startups avec IA au cœur du produit, adhérentes FTGP. Pas besoin de clients, early stage accepté. Coût : inclus dans l'adhésion FTGP. Programme continu, pas de promotion annuelle. FTGP est ambassadrice du plan national Osez l'IA. Candidature : https://npammhndz0r.typeform.com/to/A1cmwNFi Contact éligibilité : melissa@frenchtech-grandparis.fr`
   },
   {
     title: "HIIT — Health Innovation Intensive Training",
     url: "https://www.frenchtech-grandparis.com/ft-programs/hiit",
-    content: `HIIT (Health Innovation Intensive Training) est un programme intensif d'une semaine pour startups MedTech et HealthTech, sous Haut Patronage du Président de la République, dans le cadre de la stratégie Innovation Santé 2030. Public : startups en phase pré-clinique. Format : 1 semaine intensive obligatoire. Sélection : jury multidisciplinaire (cliniciens, investisseurs medtech, experts réglementaires, market access). Gratuit : 72 startups déjà accompagnées sans frais. Ce que ça apporte : clarification trajectoire réglementaire MDR marquage CE, rencontres soignants patients AP-HP HAS DGOS, compréhension attentes investisseurs, communauté alumni. HIIT n'est PAS un incubateur. Contact : https://www.frenchtech-grandparis.com/contact`
+    content: `HIIT Health Innovation Intensive Training est un programme intensif d'une semaine pour startups MedTech et HealthTech, sous Haut Patronage du Président de la République, dans le cadre de la stratégie Innovation Santé 2030. Public : startups en phase pré-clinique. Format : 1 semaine intensive obligatoire. Sélection : jury multidisciplinaire cliniciens investisseurs medtech experts réglementaires market access. Gratuit : 72 startups déjà accompagnées sans frais. Ce que ça apporte : clarification trajectoire réglementaire MDR marquage CE, rencontres soignants patients AP-HP HAS DGOS, compréhension attentes investisseurs, communauté alumni. HIIT n'est PAS un incubateur. Contact : https://www.frenchtech-grandparis.com/contact`
   },
   {
     title: "Gen50Tech — Programme inclusion générationnelle",
     url: "https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis",
-    content: `Gen50Tech est un programme contre l'âgisme dans la tech porté par French Tech Grand Paris. La French Tech ne compte que 2,4% de salariés de plus de 55 ans. Gen50Tech agit pour changer ça. Programme structuré avec ateliers trimestriels, toolkit RH, assistant virtuel pour rendre les offres inclusives, job datings dédiés +50 ans. Signataires : 360Learning, Brevo, Doctolib, Malt, Swile, Ledger, Gojob, Pigment, Alma, Electra, Welcome to the Jungle. Engagements : lutter contre l'âgisme, ouvrir les recrutements, expérimenter sans quota imposé. Adapté à toutes tailles : startups scale-ups fonds grands groupes. Pour signer la charte : https://www.frenchtech-grandparis.com/adhesion`
+    content: `Gen50Tech est un programme contre l'âgisme dans la tech porté par French Tech Grand Paris. La French Tech ne compte que 2,4 pourcent de salariés de plus de 55 ans. Programme structuré avec ateliers trimestriels, toolkit RH, assistant virtuel pour rendre les offres inclusives, job datings dédiés plus de 50 ans. Signataires : 360Learning, Brevo, Doctolib, Malt, Swile, Ledger, Gojob, Pigment, Alma, Electra, Welcome to the Jungle. Engagements : lutter contre l'âgisme, ouvrir les recrutements, expérimenter sans quota imposé. Adapté à toutes tailles startups scale-ups fonds grands groupes. Pour signer la charte : https://www.frenchtech-grandparis.com/adhesion`
   },
   {
     title: "French Tech Tremplin — Entrepreneuriat et diversité",
@@ -46,82 +45,82 @@ const DOCUMENTS = [
   {
     title: "Je choisis la French Tech — Programme achats",
     url: "https://www.frenchtech-grandparis.com/ft-programs/je-choisis-la-french-tech",
-    content: `Je choisis la French Tech est un programme pour doubler les achats publics et privés vers les startups d'ici 2027. 11 grands groupes engagés à consacrer 1 milliard d'euros aux startups French Tech 2024-2026 : ADP, AXA, BPCE, Capgemini, CMA CGM, EDF, FDJ, Orange, SNCF, Sopra Steria, BNP Paribas. Plus de 700 entreprises participantes, plus de 90 partenaires publics. Reverse Pitchs FTGP réservés aux membres adhérents : Partech, Kima Ventures, Carrefour, Caisse des Dépôts, AXA, EDF déjà réalisés. Pour participer aux reverse pitchs : adhésion obligatoire. Adhésion : https://www.frenchtech-grandparis.com/adhesion`
+    content: `Je choisis la French Tech est un programme pour doubler les achats publics et privés vers les startups d'ici 2027. 11 grands groupes engagés à consacrer 1 milliard d'euros aux startups French Tech 2024-2026 : ADP, AXA, BPCE, Capgemini, CMA CGM, EDF, FDJ, Orange, SNCF, Sopra Steria, BNP Paribas. Plus de 700 entreprises participantes, plus de 90 partenaires publics. Reverse Pitchs FTGP réservés aux membres adhérents. Pour participer aux reverse pitchs adhésion obligatoire. Adhésion : https://www.frenchtech-grandparis.com/adhesion`
   },
   {
     title: "French Tech Central — Accès aux services publics",
     url: "https://www.frenchtech-grandparis.com/ft-programs/french-tech-central",
-    content: `French Tech Central facilite l'accès des startups aux services publics. Lancé en 2017. Plus de 60 administrations partenaires, plus de 245 correspondants. Lieux totems Paris : Morning Bourse et Station F. Formats : office hours, workshops, masterclasses, RDV 1-to-1 de 30 minutes avec experts INPI URSSAF France Travail Bpifrance DGFiP Douanes CNRS DRIETTS. Thèmes : financement subventions CIR dettes, protection innovations, juridique fiscal, recrutement, propriété intellectuelle. Chiffres 2023 : 245 interlocuteurs publics, 125 masterclasses, 2419 RDV startups. Éligible : toutes startups sans critère de taille secteur ou stade. Contact : https://www.frenchtech-grandparis.com/contact`
+    content: `French Tech Central facilite l'accès des startups aux services publics. Lancé en 2017. Plus de 60 administrations partenaires, plus de 245 correspondants. Lieux totems Paris : Morning Bourse et Station F. Formats : office hours, workshops, masterclasses, RDV 1-to-1 de 30 minutes avec experts INPI URSSAF France Travail Bpifrance DGFiP Douanes CNRS DRIETTS. Thèmes : financement subventions CIR dettes, protection innovations, juridique fiscal, recrutement, propriété intellectuelle. Chiffres 2023 : 245 interlocuteurs publics, 125 masterclasses, 2419 RDV startups. Éligible : toutes startups. Contact : https://www.frenchtech-grandparis.com/contact`
   },
   {
     title: "French Tech Visa — Titre de séjour pour talents étrangers",
     url: "https://www.frenchtech-grandparis.com/ft-programs/ft-visa",
-    content: `French Tech Visa est un titre de séjour simplifié Passeport Talent pour talents non-européens rejoignant la tech française. 3 profils : Employés salaire supérieur à 43243 euros brut par an contrat CDI ou CDD entreprise innovante, Fondateurs projet innovant reconnu ressources supérieures au SMIC 21621 euros, Investisseurs plus de 300000 euros investissement direct plus de 30 pour cent du capital. Durée jusqu'à 4 ans renouvelable. Famille incluse conjoint peut travailler. Coût total 225 euros plus 99 euros visa. Citoyens algériens régime spécifique. Demande : https://france-visas.gouv.fr Contact : https://www.frenchtech-grandparis.com/contact`
+    content: `French Tech Visa est un titre de séjour simplifié Passeport Talent pour talents non-européens rejoignant la tech française. 3 profils : Employés salaire supérieur à 43243 euros brut par an contrat CDI ou CDD entreprise innovante, Fondateurs projet innovant reconnu ressources supérieures au SMIC, Investisseurs plus de 300000 euros investissement direct. Durée jusqu'à 4 ans renouvelable. Famille incluse conjoint peut travailler. Coût total 225 euros plus 99 euros visa. Citoyens algériens régime spécifique. Demande : https://france-visas.gouv.fr Contact : https://www.frenchtech-grandparis.com/contact`
   },
   {
     title: "Adhésion French Tech Grand Paris",
     url: "https://www.frenchtech-grandparis.com/adhesion",
-    content: `L'adhésion à French Tech Grand Paris est annuelle. Elle donne accès à tous les programmes Track IA HIIT Gen50Tech Tremplin Ville de Demain, les événements exclusifs, le réseau de startups membres, la visibilité dans l'écosystème. Perks adhérents : Optivalue.ai 3 mois offerts Team 3000 euros, BPI France 30 minutes chargé affaires innovation, Pennylane 2 mois offerts, Brevo moins 40 pour cent, OVHcloud support premium 48h. Réduction croisée moins 50 pour cent avec Hub France IA. Adhérer : https://www.frenchtech-grandparis.com/adhesion`
-  },
-  {
-    title: "French Tech Next40/120 — Scale-ups les plus performantes",
-    url: "https://lafrenchtech.gouv.fr",
-    content: `French Tech Next40/120 est un programme annuel de l'État accompagnant les 120 scale-up françaises les plus performantes. Lancé en 2019. Next40 : 40 startups les plus performantes avec CA supérieur à 100 millions d'euros et croissance de 15 pour cent sur 3 ans, ou levées cumulées supérieures à 100 millions d'euros. French Tech 120 : 80 startups à fort potentiel. 6e promotion 2025 annoncée le 5 juin 2025. Candidatures actuellement fermées. Lauréats Next40 : Mistral AI, Doctolib, BlaBlaCar, Qonto, Malt, Alan, BackMarket, Ledger, PayFit, Contentsquare, Exotec. Plus d'infos : https://lafrenchtech.gouv.fr`
-  },
-  {
-    title: "French Tech 2030 — Startups DeepTech stratégiques",
-    url: "https://lafrenchtech.gouv.fr",
-    content: `French Tech 2030 est un programme pour startups DeepTech stratégiques dans les domaines IA cybersécurité quantique robotique spatial électronique infrastructures cloud. 2e promotion novembre 2025, 80 entreprises sélectionnées. Marraine : Christel Heydemann DG Orange. Éligibilité : créée depuis janvier 2012, siège en France, plus de 3 millions d'euros levés ou générés depuis janvier 2023, non cotée, TRL supérieur ou égal à 6. Accompagnement 1 an avec start-up manager dédié. Candidatures fermées. Plus d'infos : https://lafrenchtech.gouv.fr`
+    content: `L'adhésion à French Tech Grand Paris est annuelle. Elle donne accès à tous les programmes Track IA HIIT Gen50Tech Tremplin Ville de Demain, les événements exclusifs, le réseau de startups membres, la visibilité dans l'écosystème. Perks adhérents : Optivalue.ai 3 mois offerts Team 3000 euros, BPI France 30 minutes chargé affaires innovation, Pennylane 2 mois offerts, Brevo moins 40 pourcent, OVHcloud support premium 48h. Réduction croisée moins 50 pourcent avec Hub France IA. Adhérer : https://www.frenchtech-grandparis.com/adhesion`
   }
 ];
 
-// ─── DÉCOUPAGE EN CHUNKS ──────────────────────────────────────────────────
+// Découpage en chunks de 600 caractères max
 function chunkText(text, maxChars) {
-  maxChars = maxChars || 800;
-  var sentences = text.split(/(?<=[.!?])\s+/);
+  maxChars = maxChars || 600;
+  var sentences = text.split(/\.\s+/);
   var chunks = [];
   var current = "";
   for (var i = 0; i < sentences.length; i++) {
-    if ((current + " " + sentences[i]).length > maxChars && current.length > 0) {
+    var candidate = current ? current + ". " + sentences[i] : sentences[i];
+    if (candidate.length > maxChars && current.length > 0) {
       chunks.push(current.trim());
       current = sentences[i];
     } else {
-      current = current ? current + " " + sentences[i] : sentences[i];
+      current = candidate;
     }
   }
   if (current.trim()) chunks.push(current.trim());
   return chunks;
 }
 
-// ─── EMBEDDING VIA MISTRAL ────────────────────────────────────────────────
+// Embedding via Hugging Face (gratuit)
 async function getEmbedding(text) {
-  var res = await fetch("https://api.mistral.ai/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + MISTRAL_API_KEY
-    },
-    body: JSON.stringify({
-      model: "mistral-embed",
-      inputs: [text]
-    })
-  });
+  var res = await fetch(
+    "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + HF_TOKEN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ inputs: text, options: { wait_for_model: true } })
+    }
+  );
   if (!res.ok) {
     var err = await res.text();
-    throw new Error("Mistral embedding error: " + err);
+    throw new Error("HF embedding error: " + err);
   }
   var data = await res.json();
-  return data.data[0].embedding;
+  // Le modèle retourne un tableau de tableaux — on prend la moyenne
+  if (Array.isArray(data[0])) {
+    var dim = data[0].length;
+    var avg = new Array(dim).fill(0);
+    for (var i = 0; i < data.length; i++) {
+      for (var j = 0; j < dim; j++) {
+        avg[j] += data[i][j] / data.length;
+      }
+    }
+    return avg;
+  }
+  return data;
 }
 
-// ─── INDEXATION PRINCIPALE ────────────────────────────────────────────────
 async function indexAll() {
-  console.log("Démarrage de l'indexation...");
-  console.log("Suppression des anciens documents...");
+  console.log("Démarrage indexation...");
   await sb.from("documents").delete().neq("id", 0);
   console.log("Table vidée.");
 
-  var totalChunks = 0;
+  var total = 0;
 
   for (var i = 0; i < DOCUMENTS.length; i++) {
     var doc = DOCUMENTS[i];
@@ -130,34 +129,26 @@ async function indexAll() {
     console.log("  → " + chunks.length + " chunk(s)");
 
     for (var j = 0; j < chunks.length; j++) {
-      var chunk = chunks[j];
       try {
-        // Attente courte pour éviter rate limit Mistral
-        await new Promise(function(r) { setTimeout(r, 200); });
-        var embedding = await getEmbedding(chunk);
-        var insertRes = await sb.from("documents").insert({
-          content: chunk,
+        await new Promise(function(r) { setTimeout(r, 500); });
+        var embedding = await getEmbedding(chunks[j]);
+        var r = await sb.from("documents").insert({
+          content: chunks[j],
           embedding: embedding,
-          metadata: {
-            title: doc.title,
-            url: doc.url,
-            chunk_index: j,
-            total_chunks: chunks.length
-          }
+          metadata: { title: doc.title, url: doc.url, chunk_index: j }
         });
-        if (insertRes.error) {
-          console.error("  ✗ Erreur insert chunk " + j + ":", insertRes.error.message);
+        if (r.error) {
+          console.error("  ✗ Erreur insert:", r.error.message);
         } else {
-          console.log("  ✓ Chunk " + (j + 1) + "/" + chunks.length + " indexé");
-          totalChunks++;
+          console.log("  ✓ Chunk " + (j+1) + "/" + chunks.length + " indexé");
+          total++;
         }
       } catch(e) {
-        console.error("  ✗ Erreur chunk " + j + ":", e.message);
+        console.error("  ✗ Erreur:", e.message);
       }
     }
   }
-
-  console.log("\n✅ Indexation terminée ! " + totalChunks + " chunks indexés dans Supabase.");
+  console.log("\n✅ Terminé ! " + total + " chunks indexés dans Supabase.");
 }
 
 indexAll().catch(function(e) {
