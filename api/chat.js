@@ -1,8 +1,8 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// ─── CACHE EN MÉMOIRE (1h) ─────────────────────────────────────────────────
+// ─── CACHE MÉMOIRE 1H ──────────────────────────────────────────────────────
 var pageCache = {};
-var CACHE_TTL = 60 * 60 * 1000; // 1 heure
+var CACHE_TTL = 60 * 60 * 1000;
 
 const ALL_URLS = {
   "track-ia":           "https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle",
@@ -52,15 +52,14 @@ function getToday() {
   return days[n.getDay()]+" "+n.getDate()+" "+months[n.getMonth()]+" "+n.getFullYear()+" ("+n.toISOString().split("T")[0]+")";
 }
 
-// Scraping avec cache — si la page est en cache ET fraîche → retourne le cache immédiatement
 async function scrapeWithCache(url) {
   var now = Date.now();
   if (pageCache[url] && (now - pageCache[url].time) < CACHE_TTL) {
-    return pageCache[url].content; // Cache hit — instantané !
+    return pageCache[url].content;
   }
   try {
     var ctrl = new AbortController();
-    var t = setTimeout(function(){ ctrl.abort(); }, 6000);
+    var t = setTimeout(function(){ ctrl.abort(); }, 5000);
     var res = await fetch("https://r.jina.ai/"+url, {
       headers: { "Accept": "text/plain", "X-Return-Format": "text" },
       signal: ctrl.signal
@@ -69,7 +68,7 @@ async function scrapeWithCache(url) {
     if (!res.ok) return null;
     var txt = await res.text();
     var content = txt.length > 3000 ? txt.substring(0, 3000) : txt;
-    pageCache[url] = { content: content, time: now }; // Stocke en cache
+    pageCache[url] = { content: content, time: now };
     return content;
   } catch(e) { return null; }
 }
@@ -100,6 +99,30 @@ async function hybridSearch(query, embedding) {
   } catch(e) { return []; }
 }
 
+// ─── APPEL CLAUDE HAIKU ────────────────────────────────────────────────────
+async function callClaude(systemPrompt, messages) {
+  var res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 600,
+      system: systemPrompt,
+      messages: messages
+    })
+  });
+  if (!res.ok) {
+    var err = await res.text();
+    throw new Error("Claude error: "+err);
+  }
+  var data = await res.json();
+  return data.content && data.content[0] && data.content[0].text ? data.content[0].text : null;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -107,20 +130,43 @@ module.exports = async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  var message = req.body && req.body.message;
-  var sid     = (req.body && req.body.session_id) || ("anon-"+Date.now());
-  var history = (req.body && req.body.history) || [];
-  var apiKey  = process.env.MISTRAL_API_KEY;
+  var message  = req.body && req.body.message;
+  var sid      = (req.body && req.body.session_id) || ("anon-"+Date.now());
+  var history  = (req.body && req.body.history) || [];
+  var mode     = (req.body && req.body.mode) || "chat"; // "chat" ou "refine"
+  var context  = (req.body && req.body.context) || "";  // pour le mode refine
 
   if (!message) return res.status(400).json({ error: "Message requis" });
 
   try {
     var today = getToday();
+
+    // ─── MODE REFINE : génère 4 amorces intelligentes ──────────────────────
+    if (mode === "refine") {
+      var refinePrompt =
+        "Tu es l'assistant de la French Tech Grand Paris.\n"+
+        "La personne a posé cette question : \""+message+"\"\n"+
+        "Elle n'est pas satisfaite de cette réponse : \""+context+"\"\n\n"+
+        "Génère exactement 4 questions ou amorces TRÈS courtes (max 6 mots) pour l'aider à préciser sa demande.\n"+
+        "Sois intelligent — analyse ce qui manque dans la question et propose des précisions pertinentes.\n"+
+        "Réponds UNIQUEMENT avec un JSON array de 4 strings, rien d'autre.\n"+
+        "Exemple: [\"Ma startup est en B2B\",\"Je cherche du financement\",\"Mon secteur est HealthTech\",\"Je suis en pre-seed\"]";
+
+      try {
+        var refineRes = await callClaude(refinePrompt, [{role:"user",content:"Génère les 4 amorces."}]);
+        var clean = refineRes.replace(/```json|```/g,"").trim();
+        var opts = JSON.parse(clean);
+        return res.status(200).json({ refinements: opts });
+      } catch(e) {
+        return res.status(200).json({ refinements: ["Mon secteur est différent","Je cherche du financement","Ma startup est early stage","Je veux plus de détails"] });
+      }
+    }
+
+    // ─── MODE CHAT NORMAL ──────────────────────────────────────────────────
     var pages = detectPages(message);
 
-    // Lance scraping + embedding EN PARALLÈLE
-    var [liveContent, embedding] = await Promise.all([
-      // Scrape max 2 pages en parallèle aussi
+    // Scraping + embedding EN PARALLÈLE
+    var results = await Promise.all([
       Promise.all(pages.slice(0,2).map(function(p) {
         return scrapeWithCache(ALL_URLS[p]).then(function(c) {
           return c ? "=== "+ALL_URLS[p]+" ===\n"+c : null;
@@ -129,63 +175,50 @@ module.exports = async function handler(req, res) {
       getEmbedding(message)
     ]);
 
-    // RAG Supabase
+    var liveContent = results[0];
+    var embedding   = results[1];
+
+    // RAG
     var ragContent = "";
     if (embedding) {
       var chunks = await hybridSearch(message, embedding);
       if (chunks.length > 0) ragContent = chunks.map(function(c){ return c.content; }).join("\n\n");
     }
 
-    var context = "";
-    if (liveContent) context += "SITE FTGP (prioritaire) :\n"+liveContent+"\n\n";
-    if (ragContent)  context += "BASE RAG :\n"+ragContent;
-    if (!context)    context  = "Aucun contenu trouvé.";
+    var ctx = "";
+    if (liveContent) ctx += "SITE FTGP (prioritaire, info à jour) :\n"+liveContent+"\n\n";
+    if (ragContent)  ctx += "BASE RAG :\n"+ragContent;
+    if (!ctx)        ctx  = "Aucun contenu trouvé.";
 
     var systemPrompt =
       "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP). Aujourd'hui : "+today+"\n\n"+
-      "RÈGLES ABSOLUES :\n"+
+      "RÈGLES :\n"+
       "• Réponds en français, direct, startup-friendly, tu tutoies.\n"+
       "• Utilise UNIQUEMENT le contexte. ZÉRO invention.\n"+
-      "• Site FTGP = prioritaire sur RAG.\n"+
-      "• Date passée = candidatures FERMÉES. Ne donne pas de lien d'inscription si fermé.\n"+
+      "• Site FTGP = prioritaire. Date passée = candidatures FERMÉES.\n"+
       "• Info manquante → https://www.frenchtech-grandparis.com/contact\n"+
-      "• Hors FTGP → décline.\n"+
+      "• Hors FTGP → décline poliment.\n"+
       "• Tu ne connais pas l'identité de la personne.\n\n"+
       "FORMAT :\n"+
       "• Court et percutant (3-4 phrases max sauf si complexe).\n"+
       "• **Gras** pour les infos clés.\n"+
       "• Listes à puces pour 3+ éléments.\n"+
-      "• Liens cliquables : [texte](url)\n"+
-      "• CTA final si pertinent : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion)\n\n"+
-      "CONTEXTE :\n"+context;
+      "• Liens : [texte](url)\n"+
+      "• CTA si pertinent : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion)\n\n"+
+      "CONTEXTE :\n"+ctx;
 
     var msgs = history.slice(-6).map(function(m){ return {role:m.role,content:m.content}; });
     msgs.push({role:"user",content:message});
 
-    var llmRes = await fetch("https://api.mistral.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
-      body: JSON.stringify({
-        model: "mistral-large-latest",
-        messages: [{role:"system",content:systemPrompt}].concat(msgs),
-        max_tokens: 500,
-        temperature: 0.1
-      })
-    });
+    var reply = await callClaude(systemPrompt, msgs);
+    if (!reply) reply = "Je n'ai pas pu générer de réponse. [Contacte-nous](https://www.frenchtech-grandparis.com/contact)";
 
-    if (!llmRes.ok) return res.status(200).json({ reply:"Problème technique. [Contacte-nous](https://www.frenchtech-grandparis.com/contact)" });
-
-    var data = await llmRes.json();
-    var reply = data.choices && data.choices[0] && data.choices[0].message
-      ? data.choices[0].message.content
-      : "Je n'ai pas pu générer de réponse. [Contacte-nous](https://www.frenchtech-grandparis.com/contact)";
-
-    // Log non-bloquant
+    // Log Supabase
     if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
       try {
         var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-        sb.from("chat_logs").insert({ session_id:sid, question:message, answer:reply });
-      } catch(e) { console.error("Supabase log error:", e); }
+        await sb.from("chat_logs").insert({ session_id:sid, question:message, answer:reply });
+      } catch(e) {}
     }
 
     return res.status(200).json({ reply:reply, session_id:sid });
