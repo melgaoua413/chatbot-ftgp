@@ -1,6 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// ─── CACHE MÉMOIRE 1H ──────────────────────────────────────────────────────
 var pageCache = {};
 var CACHE_TTL = 60 * 60 * 1000;
 
@@ -35,7 +34,7 @@ function detectPages(q) {
   if (/tremplin|diversit|bourse|boursier|qpv|rsa/.test(q)) p.push("tremplin");
   if (/central|service.?public|inpi|urssaf/.test(q)) p.push("central");
   if (/programme|tous les|liste|accompagnement/.test(q)) p.push("programmes");
-  if (/evenement|event|soiree|agenda|date|calendrier|find.?your|networking|vivatech/.test(q)) p.push("evenements");
+  if (/evenement|event|soiree|agenda|date|calendrier|find.?your|networking/.test(q)) p.push("evenements");
   if (/adhesion|adherer|membre|rejoindre|tarif|prix/.test(q)) p.push("adhesion");
   if (/qui.?sommes|equipe|histoire|mission/.test(q)) p.push("qui-sommes-nous");
   if (/contact|joindre|email/.test(q)) p.push("contact");
@@ -43,6 +42,13 @@ function detectPages(q) {
   if (/partenaire.?priv/.test(q)) p.push("partenaires-prives");
   if (p.length === 0) p.push("accueil");
   return p;
+}
+
+function detectLanguage(text) {
+  var fr = /[àâäéèêëîïôùûüç]|(\b(je|tu|il|nous|vous|ils|est|les|des|une|pour|avec|dans|sur|que|qui|pas|plus|très|bien|aussi|mais|donc|car|je suis|c'est|qu'est)\b)/i.test(text);
+  var en = /(\b(the|is|are|was|were|what|how|when|where|why|who|can|could|would|should|have|has|had|will|do|does|did|my|your|our|their|this|that|these|those|and|or|but|for|with|from|about|into|through|i am|it is|what is)\b)/i.test(text);
+  if (en && !fr) return "en";
+  return "fr";
 }
 
 function getToday() {
@@ -54,9 +60,7 @@ function getToday() {
 
 async function scrapeWithCache(url) {
   var now = Date.now();
-  if (pageCache[url] && (now - pageCache[url].time) < CACHE_TTL) {
-    return pageCache[url].content;
-  }
+  if (pageCache[url] && (now - pageCache[url].time) < CACHE_TTL) return pageCache[url].content;
   try {
     var ctrl = new AbortController();
     var t = setTimeout(function(){ ctrl.abort(); }, 5000);
@@ -99,30 +103,6 @@ async function hybridSearch(query, embedding) {
   } catch(e) { return []; }
 }
 
-// ─── APPEL CLAUDE HAIKU ────────────────────────────────────────────────────
-async function callClaude(systemPrompt, messages) {
-  var res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 600,
-      system: systemPrompt,
-      messages: messages
-    })
-  });
-  if (!res.ok) {
-    var err = await res.text();
-    throw new Error("Claude error: "+err);
-  }
-  var data = await res.json();
-  return data.content && data.content[0] && data.content[0].text ? data.content[0].text : null;
-}
-
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -133,39 +113,41 @@ module.exports = async function handler(req, res) {
   var message  = req.body && req.body.message;
   var sid      = (req.body && req.body.session_id) || ("anon-"+Date.now());
   var history  = (req.body && req.body.history) || [];
-  var mode     = (req.body && req.body.mode) || "chat"; // "chat" ou "refine"
-  var context  = (req.body && req.body.context) || "";  // pour le mode refine
+  var mode     = (req.body && req.body.mode) || "chat";
+  var context  = (req.body && req.body.context) || "";
+  var stream   = (req.body && req.body.stream) === true;
+  var unknownCount = (req.body && req.body.unknown_count) || 0;
 
   if (!message) return res.status(400).json({ error: "Message requis" });
 
   try {
     var today = getToday();
+    var lang  = detectLanguage(message);
 
-    // ─── MODE REFINE : génère 4 amorces intelligentes ──────────────────────
+    // ─── MODE REFINE ──────────────────────────────────────────────────────
     if (mode === "refine") {
-      var refinePrompt =
-        "Tu es l'assistant de la French Tech Grand Paris.\n"+
-        "La personne a posé cette question : \""+message+"\"\n"+
-        "Elle n'est pas satisfaite de cette réponse : \""+context+"\"\n\n"+
-        "Génère exactement 4 questions ou amorces TRÈS courtes (max 6 mots) pour l'aider à préciser sa demande.\n"+
-        "Sois intelligent — analyse ce qui manque dans la question et propose des précisions pertinentes.\n"+
-        "Réponds UNIQUEMENT avec un JSON array de 4 strings, rien d'autre.\n"+
-        "Exemple: [\"Ma startup est en B2B\",\"Je cherche du financement\",\"Mon secteur est HealthTech\",\"Je suis en pre-seed\"]";
+      var refinePrompt = lang === "en"
+        ? "The user asked: \""+message+"\"\nThey were not satisfied with: \""+context+"\"\nGenerate exactly 4 very short suggestions (max 6 words each) to help refine their question. Reply ONLY with a JSON array of 4 strings."
+        : "La personne a posé : \""+message+"\"\nPas satisfaite de : \""+context+"\"\nGénère 4 amorces TRÈS courtes (max 6 mots) pour affiner. Réponds UNIQUEMENT avec un JSON array de 4 strings.";
 
       try {
-        var refineRes = await callClaude(refinePrompt, [{role:"user",content:"Génère les 4 amorces."}]);
-        var clean = refineRes.replace(/```json|```/g,"").trim();
-        var opts = JSON.parse(clean);
+        var rfRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method:"POST",
+          headers:{"Content-Type":"application/json","x-api-key":process.env.ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01"},
+          body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:150, system:refinePrompt, messages:[{role:"user",content:"Génère les 4 amorces."}] })
+        });
+        var rfData = await rfRes.json();
+        var rfText = rfData.content && rfData.content[0] ? rfData.content[0].text : "[]";
+        var opts = JSON.parse(rfText.replace(/```json|```/g,"").trim());
         return res.status(200).json({ refinements: opts });
       } catch(e) {
         return res.status(200).json({ refinements: ["Mon secteur est différent","Je cherche du financement","Ma startup est early stage","Je veux plus de détails"] });
       }
     }
 
-    // ─── MODE CHAT NORMAL ──────────────────────────────────────────────────
+    // ─── MODE CHAT ────────────────────────────────────────────────────────
     var pages = detectPages(message);
 
-    // Scraping + embedding EN PARALLÈLE
     var results = await Promise.all([
       Promise.all(pages.slice(0,2).map(function(p) {
         return scrapeWithCache(ALL_URLS[p]).then(function(c) {
@@ -178,7 +160,6 @@ module.exports = async function handler(req, res) {
     var liveContent = results[0];
     var embedding   = results[1];
 
-    // RAG
     var ragContent = "";
     if (embedding) {
       var chunks = await hybridSearch(message, embedding);
@@ -186,42 +167,127 @@ module.exports = async function handler(req, res) {
     }
 
     var ctx = "";
-    if (liveContent) ctx += "SITE FTGP (prioritaire, info à jour) :\n"+liveContent+"\n\n";
+    if (liveContent) ctx += "SITE FTGP (prioritaire) :\n"+liveContent+"\n\n";
     if (ragContent)  ctx += "BASE RAG :\n"+ragContent;
     if (!ctx)        ctx  = "Aucun contenu trouvé.";
 
+    // Langue de réponse
+    var langInstruction = lang === "en"
+      ? "The user is writing in English. Respond in English."
+      : "Réponds en français.";
+
+    // Escalade si bot a déjà dit "je ne sais pas" 2+ fois
+    var escaladeInstruction = unknownCount >= 2
+      ? "\n⚠️ ESCALADE : L'utilisateur a posé plusieurs questions sans réponse satisfaisante. Dis-lui gentiment que tu vas le rediriger vers l'équipe et termine ta réponse par le signal ##ESCALADE##"
+      : "";
+
     var systemPrompt =
-      "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP). Aujourd'hui : "+today+"\n\n"+
-      "RÈGLES :\n"+
-      "• Réponds en français, direct, startup-friendly, tu tutoies.\n"+
-      "• Utilise UNIQUEMENT le contexte. ZÉRO invention.\n"+
+      "Tu es l'assistant officiel de la French Tech Grand Paris (FTGP). Aujourd'hui : "+today+"\n"+
+      langInstruction+"\n\n"+
+      "RÈGLES ABSOLUES :\n"+
+      "• Utilise UNIQUEMENT le contexte fourni. ZÉRO invention.\n"+
       "• Site FTGP = prioritaire. Date passée = candidatures FERMÉES.\n"+
-      "• Info manquante → https://www.frenchtech-grandparis.com/contact\n"+
+      "• Tu ne connais PAS l'identité de la personne.\n"+
       "• Hors FTGP → décline poliment.\n"+
-      "• Tu ne connais pas l'identité de la personne.\n\n"+
+      "• Si info manquante → https://www.frenchtech-grandparis.com/contact\n\n"+
+      "PROTECTION DONNÉES PERSONNELLES :\n"+
+      "• Ne donne JAMAIS les coordonnées personnelles de l'équipe FTGP (emails perso, téléphones).\n"+
+      "• Tu peux mentionner les POSTES visibles sur 'Qui sommes-nous' mais JAMAIS les contacts directs.\n"+
+      "• Contact humain → uniquement contact@frenchtech-grandparis.com ou https://www.frenchtech-grandparis.com/contact\n\n"+
       "FORMAT :\n"+
       "• Court et percutant (3-4 phrases max sauf si complexe).\n"+
-      "• **Gras** pour les infos clés.\n"+
-      "• Listes à puces pour 3+ éléments.\n"+
+      "• **Gras** pour les infos clés. Listes à puces pour 3+ éléments.\n"+
       "• Liens : [texte](url)\n"+
-      "• CTA si pertinent : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion)\n\n"+
+      "• CTA si pertinent : 👉 [Adhérer](https://www.frenchtech-grandparis.com/adhesion)\n"+
+      "• Si tu ne sais vraiment pas → écris le signal ##INCONNU## à la fin.\n"+
+      escaladeInstruction+"\n\n"+
       "CONTEXTE :\n"+ctx;
 
     var msgs = history.slice(-6).map(function(m){ return {role:m.role,content:m.content}; });
     msgs.push({role:"user",content:message});
 
-    var reply = await callClaude(systemPrompt, msgs);
+    // ─── STREAMING ────────────────────────────────────────────────────────
+    if (stream) {
+      res.setHeader("Content-Type","text/event-stream");
+      res.setHeader("Cache-Control","no-cache");
+      res.setHeader("Connection","keep-alive");
+
+      var streamRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","x-api-key":process.env.ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01"},
+        body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:600, system:systemPrompt, messages:msgs, stream:true })
+      });
+
+      var fullText = "";
+      var newUnknown = unknownCount;
+      var reader = streamRes.body.getReader();
+      var decoder = new TextDecoder();
+
+      while (true) {
+        var chunk = await reader.read();
+        if (chunk.done) break;
+        var lines = decoder.decode(chunk.value).split("\n");
+        for (var i=0; i<lines.length; i++) {
+          var line = lines[i].trim();
+          if (!line.startsWith("data:")) continue;
+          var data = line.slice(5).trim();
+          if (data === "[DONE]") continue;
+          try {
+            var parsed = JSON.parse(data);
+            if (parsed.type === "content_block_delta" && parsed.delta && parsed.delta.text) {
+              var token = parsed.delta.text;
+              fullText += token;
+              res.write("data: "+JSON.stringify({token:token})+"\n\n");
+            }
+          } catch(e) {}
+        }
+      }
+
+      // Détecte escalade et inconnu
+      var isUnknown = fullText.includes("##INCONNU##");
+      var isEscalade = fullText.includes("##ESCALADE##");
+      if (isUnknown) newUnknown++;
+      fullText = fullText.replace(/##INCONNU##|##ESCALADE##/g,"").trim();
+
+      res.write("data: "+JSON.stringify({done:true, unknown_count:newUnknown, escalade:isEscalade})+"\n\n");
+      res.end();
+
+      // Log async
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
+        try {
+          var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+          await sb.from("chat_logs").insert({ session_id:sid, question:message, answer:fullText });
+        } catch(e) {}
+      }
+      return;
+    }
+
+    // ─── MODE NORMAL (sans streaming) ─────────────────────────────────────
+    var llmRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":process.env.ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:600, system:systemPrompt, messages:msgs })
+    });
+
+    if (!llmRes.ok) return res.status(200).json({ reply:"Problème technique. [Contacte-nous](https://www.frenchtech-grandparis.com/contact)" });
+
+    var data = await llmRes.json();
+    var reply = data.content && data.content[0] ? data.content[0].text : null;
     if (!reply) reply = "Je n'ai pas pu générer de réponse. [Contacte-nous](https://www.frenchtech-grandparis.com/contact)";
 
-    // Log Supabase
+    var isUnknown = reply.includes("##INCONNU##");
+    var isEscalade = reply.includes("##ESCALADE##");
+    var newUnknown2 = isUnknown ? unknownCount+1 : unknownCount;
+    reply = reply.replace(/##INCONNU##|##ESCALADE##/g,"").trim();
+
     if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY) {
       try {
-        var sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-        await sb.from("chat_logs").insert({ session_id:sid, question:message, answer:reply });
+        var sb2 = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+        await sb2.from("chat_logs").insert({ session_id:sid, question:message, answer:reply });
       } catch(e) {}
     }
 
-    return res.status(200).json({ reply:reply, session_id:sid });
+    return res.status(200).json({ reply:reply, session_id:sid, unknown_count:newUnknown2, escalade:isEscalade });
 
   } catch(err) {
     console.error("Error:", err);
