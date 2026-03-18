@@ -23,7 +23,8 @@ const ALL_URLS = {
 };
 
 function detectPages(q) {
-  q = q.toLowerCase();
+  var q2 = q.toLowerCase();
+  q = q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   var p = [];
   if (/track.?ia|intelligence.?artif|cartographie.?ia|masterclass/.test(q)) p.push("track-ia");
   if (/scaleup|scale.?up|excellence/.test(q)) p.push("scaleup");
@@ -34,7 +35,7 @@ function detectPages(q) {
   if (/tremplin|diversit|bourse|boursier|qpv|rsa/.test(q)) p.push("tremplin");
   if (/central|service.?public|inpi|urssaf/.test(q)) p.push("central");
   if (/programme|tous les|liste|accompagnement/.test(q)) p.push("programmes");
-  if (/evenement|event|soiree|agenda|date|calendrier|find.?your|networking/.test(q)) p.push("evenements");
+  if (/evenement|event|soiree|agenda|date|calendrier|find.?your|networking|prochains|actualit/.test(q) || /\u00e9v\u00e9nement|\u00e9v\u00e8nement|soir\u00e9e|prochaine/.test(q2)) p.push("evenements");
   if (/adhesion|adherer|membre|rejoindre|tarif|prix/.test(q)) p.push("adhesion");
   if (/qui.?sommes|equipe|histoire|mission/.test(q)) p.push("qui-sommes-nous");
   if (/contact|joindre|email/.test(q)) p.push("contact");
@@ -46,7 +47,7 @@ function detectPages(q) {
 
 function detectLanguage(text) {
   var en = /(\b(the|is|are|was|were|what|how|when|where|why|who|can|could|would|should|have|has|had|will|do|does|did|my|your|our|their|this|that|and|or|but|for|with|from|about|i am|it is|what is)\b)/i.test(text);
-  var fr = /[àâäéèêëîïôùûüç]|(\b(je|tu|il|nous|vous|ils|est|les|des|une|pour|avec|dans|sur|que|qui|pas|plus|bien|aussi|mais|donc|car|cest|quest)\b)/i.test(text);
+  var fr = /[àâäéèêëîïôùûüç]|(\b(je|tu|il|nous|vous|ils|est|les|des|une|pour|avec|dans|sur|que|qui|pas|plus|bien|aussi|mais|donc|car)\b)/i.test(text);
   if (en && !fr) return "en";
   return "fr";
 }
@@ -144,13 +145,13 @@ module.exports = async function handler(req, res) {
           "Format : 2-3 recommandations concrètes avec liens vers les bons programmes FTGP.\n"+
           "Termine par un CTA clair vers https://www.frenchtech-grandparis.com/adhesion";
         try {
-          var fr = await fetch("https://api.anthropic.com/v1/messages", {
+          var rfr = await fetch("https://api.anthropic.com/v1/messages", {
             method:"POST",
             headers:{"Content-Type":"application/json","x-api-key":process.env.ANTHROPIC_API_KEY,"anthropic-version":"2023-06-01"},
             body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:500, system:finalPrompt, messages:[{role:"user",content:"Génère la recommandation finale."}] })
           });
-          var fd = await fr.json();
-          var finalAnswer = fd.content && fd.content[0] ? fd.content[0].text : "Contacte-nous : contact@frenchtech-grandparis.com";
+          var rfd = await rfr.json();
+          var finalAnswer = rfd.content && rfd.content[0] ? rfd.content[0].text : "Contacte-nous : contact@frenchtech-grandparis.com";
           return res.status(200).json({ final_answer: finalAnswer });
         } catch(e) {
           return res.status(200).json({ final_answer: "Pour une recommandation personnalisée, contacte notre équipe : contact@frenchtech-grandparis.com" });
