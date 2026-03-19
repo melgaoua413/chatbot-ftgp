@@ -142,13 +142,13 @@ var PWD="",REC=[];
 function login(){
   var p=document.getElementById("pi").value;
   if(!p){document.getElementById("pe").textContent="Mot de passe requis.";return;}
-  fetch("/api/dashboard?json=1",{headers:{"x-dashboard-password":p}})
+  fetch("https://chatbot-ftgp.vercel.app/api/dashboard?json=1",{headers:{"x-dashboard-password":p}})
   .then(function(r){if(r.status===401){document.getElementById("pe").textContent="Incorrect ❌";return null;}return r.json();})
   .then(function(d){if(!d)return;PWD=p;document.getElementById("ls").style.display="none";document.getElementById("main").style.display="block";render(d);setInterval(load,300000);})
   .catch(function(){document.getElementById("pe").textContent="Erreur réseau.";});
 }
 function load(){
-  fetch("/api/dashboard?json=1",{headers:{"x-dashboard-password":PWD}})
+  fetch("https://chatbot-ftgp.vercel.app/api/dashboard?json=1",{headers:{"x-dashboard-password":PWD}})
   .then(function(r){return r.json();}).then(render).catch(console.error);
 }
 function ago(iso){var m=Math.floor((new Date()-new Date(iso))/60000);if(m<1)return"à l'instant";if(m<60)return m+"min";if(m<1440)return Math.floor(m/60)+"h";return Math.floor(m/1440)+"j";}
