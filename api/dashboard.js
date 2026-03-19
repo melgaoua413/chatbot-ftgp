@@ -32,15 +32,16 @@ module.exports = async function handler(req, res) {
         if(r.answer) totalLen+=r.answer.length;
         if(!r.question) return;
         var q=r.question.toLowerCase();
-        if(/programme|track|hiit|scaleup|tremplin|gen50|visa|next40|central|ville/.test(q)) topics.programmes++;
-        if(/adh[eé]sion|member|tarif|prix|co[uû]t/.test(q)) topics.adhesion++;
-        if(/[eé]v[eé]nement|event|agenda|prochain|date|quand/.test(q)) topics.evenements++;
-        if(/[eé]quipe|team|alexandra|melissa|brandon|kristina|cl[eé]ment/.test(q)) topics.equipe++;
-        if(/partenaire|partner/.test(q)) topics.partenaires++;
-        if(/contact|joindre|[eé]crire|appeler|rdv/.test(q)) topics.contact++;
-        if(/hiit|health|sant[eé]|medtech|healthtech/.test(q)) topics.hiit++;
-        if(/track.ia|intelligence.artificielle|\bia\b|\bai\b/.test(q)) topics.trackia++;
-        if(/bonjour|merci|salut|oui|non|programme|adhesion/.test(q)) langs.fr++; else langs.en++;
+        var has=function(s){return q.indexOf(s)>-1;};
+        if(has("programme")||has("track")||has("hiit")||has("scaleup")||has("tremplin")||has("gen50")||has("visa")||has("next40")||has("central")||has("ville")) topics.programmes++;
+        if(has("adhesion")||has("adh\u00e9sion")||has("member")||has("tarif")||has("prix")||has("cout")||has("co\u00fbt")) topics.adhesion++;
+        if(has("evenement")||has("\u00e9v\u00e9nement")||has("event")||has("agenda")||has("prochain")||has("quand")) topics.evenements++;
+        if(has("equipe")||has("\u00e9quipe")||has("team")||has("alexandra")||has("melissa")||has("brandon")||has("kristina")||has("clement")) topics.equipe++;
+        if(has("partenaire")||has("partner")) topics.partenaires++;
+        if(has("contact")||has("joindre")||has("ecrire")||has("\u00e9crire")||has("appeler")||has("rdv")) topics.contact++;
+        if(has("hiit")||has("health")||has("sante")||has("sant\u00e9")||has("medtech")||has("healthtech")) topics.hiit++;
+        if(has("track ia")||has("track-ia")||has("intelligence artificielle")||has(" ia ")||has(" ai ")) topics.trackia++;
+        if(has("bonjour")||has("merci")||has("salut")||has("oui")||has("non")||has("programme")||has("adhesion")) langs.fr++; else langs.en++;
         q.split(/\s+/).forEach(function(w){
           w=w.replace(/[^a-zA-ZÀ-ÿ]/g,"");
           if(w.length>3&&!stop.includes(w)) keywords[w]=(keywords[w]||0)+1;
