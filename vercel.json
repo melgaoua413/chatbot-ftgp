@@ -1,8 +1,11 @@
 {
   "version": 2,
   "functions": {
-    "api/chat.js": {
-      "maxDuration": 30
-    }
-  }
+    "api/chat.js": { "maxDuration": 30 },
+    "api/dashboard.js": { "maxDuration": 10 }
+  },
+  "routes": [
+    { "src": "/dashboard", "dest": "/public/dashboard.html" },
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ]
 }
