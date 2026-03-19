@@ -3,8 +3,5 @@
   "functions": {
     "api/chat.js": { "maxDuration": 30 },
     "api/dashboard.js": { "maxDuration": 10 }
-  },
-  "rewrites": [
-    { "source": "/dashboard", "destination": "/public/dashboard.html" }
-  ]
+  }
 }
