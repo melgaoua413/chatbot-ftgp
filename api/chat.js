@@ -254,7 +254,7 @@ async function scrapePage(url) {
   if (process.env.FIRECRAWL_API_KEY) {
     try {
       var ctrl = new AbortController();
-      setTimeout(function(){ ctrl.abort(); }, 9000);
+      var tfc = setTimeout(function(){ ctrl.abort(); }, 5000); // 5s max
       var res = await fetch("https://api.firecrawl.dev/v1/scrape", {
         method: "POST",
         headers: {
@@ -278,19 +278,21 @@ async function scrapePage(url) {
         }
       }
     } catch(e) {}
+    finally { clearTimeout(tfc); }
   }
 
-  // Fallback Jina
+  // Fallback Jina — 4s max
   for (var i = 0; i < 2; i++) {
     try {
       var ctrl2 = new AbortController();
-      setTimeout(function(){ ctrl2.abort(); }, 6000);
+      var tj = setTimeout(function(){ ctrl2.abort(); }, 4000);
       var res2 = await fetch("https://r.jina.ai/" + url, {
         headers: { "Accept": "text/plain", "X-Return-Format": "text" },
         signal: ctrl2.signal
       });
-      if (!res2.ok) continue;
+      if (!res2.ok) { clearTimeout(tj); continue; }
       var txt = await res2.text();
+      clearTimeout(tj);
       if (!txt || txt.length < 200) continue;
       var c = txt.substring(0, 4000);
       pageCache[url] = { content: c, time: now };
