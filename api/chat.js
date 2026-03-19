@@ -135,53 +135,34 @@ La FTGP organise régulièrement des soirées networking, Find Your Prospect, af
 Les dates exactes changent régulièrement. Toujours consulter : https://www.frenchtech-grandparis.com/evenements
 
 === PARTENAIRES PRIVÉS ===
-Page : https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+Page complète avec moteur de recherche : https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
 
-Pour toute question sur les partenaires ou pour devenir partenaire → https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+⚠️ Cette liste n'est pas exhaustive — la page des partenaires contient davantage de partenaires. Toujours renvoyer vers la page pour la liste complète.
 
-Liste des partenaires privés :
+Partenaires privés (liste partielle visible sur la page) :
 
-AMGEN — Biotechnologies médicales. Développe des thérapies innovantes pour maladies graves. Présente dans +100 pays.
-
-BREVO — Solution CRM omnicanale. Unifie la relation client (marketing, ventes, conversations, fidélité) sur tous les canaux.
-
-CLIPPERTON — Banque d'affaires spécialisée tech. Conseil en fusions-acquisitions, levées de fonds et LBO.
-
-CONSEIL RÉGIONAL D'ÎLE-DE-FRANCE — Agit sur les transports, lycées, formation professionnelle, développement économique et environnement pour les 12M de Franciliens.
-
-DIGITAL MEDICAL HUB — Open innovation en santé numérique. Accompagnement au développement, positionnement et évaluation d'outils numériques en santé. (Partenaire co-pilote du programme HIIT)
-
-EPSA INNOVATION — Plateforme de solutions pour la performance économique, l'innovation et la transition environnementale des entreprises.
-
-HOLBERTON SCHOOL — École tech : développement web full-stack, IA. Forme aux postes à forte employabilité dans les grandes entreprises tech.
-
-IMPULSA — Hub d'expertise en comptabilité, finance, RH et juridique pour dirigeants d'entreprise. Fondé par deux experts-comptables.
-
+AMGEN — Biotechnologies médicales. Thérapies innovantes pour maladies graves. +100 pays.
+BREVO — Solution CRM omnicanale. Marketing, ventes, conversations, fidélité sur tous les canaux.
+CLIPPERTON — Banque d'affaires spécialisée tech. Fusions-acquisitions, levées de fonds, LBO.
+CONSEIL RÉGIONAL D'ÎLE-DE-FRANCE — Transports, lycées, formation pro, développement économique pour les 12M de Franciliens.
+DIGITAL MEDICAL HUB — Open innovation santé numérique. Co-pilote du programme HIIT.
+EPSA INNOVATION — Performance économique, innovation et transition environnementale des entreprises.
+HOLBERTON SCHOOL — École tech : développement web full-stack et IA.
+IMPULSA — Expertise comptabilité, finance, RH et juridique pour dirigeants.
 KALAMARI — Agence RP internationale dédiée à la Tech.
+MORNING — Espaces de travail, aménagement et événementiel. Lieu totem French Tech Central.
+MÉTROPOLE DU GRAND PARIS — 130 communes, 7,2 millions d'habitants.
+NONSTOPROD — Agence créative : vidéo, motion design, podcasts, photo.
+OVHCLOUD — Leader européen du cloud. ⭐ Perks : programme startup 12 mois 100% digital et gratuit.
+PENNYLANE — Gestion financière tout-en-un. ⭐ Perks : 2 mois d'abonnement offerts à la souscription.
+SLITUO — Conseil produit & stratégie NoCode. ⭐ Perks : phase de découverte gratuite.
+VILLE DE PARIS — Soutient l'innovation pour la transition écologique, économique et sociale.
+VIVA TECHNOLOGY — Événement startup & tech n°1 en Europe.
+WAVESTONE — Conseil en transformation digitale, cybersécurité, durabilité et IA. +6 000 collaborateurs, 17 pays.
 
-MORNING — Espaces de travail, aménagement et événementiel d'entreprise. (Lieu totem French Tech Central)
-
-MÉTROPOLE DU GRAND PARIS — Inter-communalité de 130 communes et 7,2 millions d'habitants.
-
-NONSTOPROD — Agence créative : brand content, interviews, captation d'événements, motion design, podcasts, shooting photo & produit.
-
-OVHCLOUD — Leader européen du cloud. Accompagne les startups avec des solutions ouvertes et scalables.
-⭐ Perks membres : programme startup OVHcloud (12 mois, 100% digital et gratuit, prise en charge exclusive pour membres FTGP).
-
-PENNYLANE — Plateforme de gestion financière tout-en-un : comptabilité pro + gestion financière + compte professionnel.
-⭐ Perks membres : 2 mois d'abonnement offerts à la souscription.
-
-SLITUO — Cabinet de conseil produit et stratégie en outils NoCode pour entrepreneurs.
-⭐ Perks membres : phase de découverte gratuite.
-
-VILLE DE PARIS — Soutient les acteurs de l'innovation pour la transition écologique, économique et sociale.
-
-VIVA TECHNOLOGY — Événement startup & tech n°1 en Europe. Catalyseur de transformation des entreprises et de croissance des startups.
-
-WAVESTONE — Cabinet de conseil en transformation (digitale, cybersécurité, durabilité, IA). +6 000 collaborateurs, présent dans 17 pays.
-
-⭐ = Partenaire avec PERKS disponibles pour les membres adhérents FTGP.
-Pour accéder aux perks → adhérer à la FTGP : https://www.frenchtech-grandparis.com/adhesion
+⭐ = Perks disponibles pour les membres adhérents FTGP.
+👉 Pour voir tous les partenaires : https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+👉 Pour accéder aux perks → adhérer : https://www.frenchtech-grandparis.com/adhesion
 
 
 === QUI SOMMES-NOUS ? ===
