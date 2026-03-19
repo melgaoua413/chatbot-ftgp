@@ -259,7 +259,7 @@ module.exports = async function handler(req, res) {
   html += "  out+=\"<div class='card'><div class='lbl'>Total</div><div class='val'>\"+(d.total||0)+\"</div><div class='sub'>conversations</div></div>\";";
   html += "  out+=\"<div class='card'><div class='lbl'>Ce mois</div><div class='val'>\"+(d.month||0)+\"</div><div class='sub'>30 derniers jours</div></div>\";";
   html += "  out+=\"<div class='card'><div class='lbl'>Semaine</div><div class='val'>\"+(d.week||0)+\"</div><div class='sub'>7 derniers jours</div></div>\";";
-  html += "  out+=\"<div class='card'><div class='lbl'>Aujourd'hui</div><div class='val'>+((d.byDay||{})[today]||0)+\"</div><div class='sub'>\"+new Date().toLocaleDateString('fr-FR')+\"</div></div>\";";
+  html += "  out+=\"<div class='card'><div class='lbl'>Aujourd hui</div><div class='val'>\"+ ((d.byDay||{})[today]||0) +\"</div><div class='sub'>\"+new Date().toLocaleDateString('fr-FR')+\"</div></div>\";";
   html += "  out+=\"<div class='card'><div class='lbl'>Moy. reponse</div><div class='val'>\"+(d.avgLen||0)+\"</div><div class='sub'>caracteres</div></div>\";";
   html += "  out+=\"</div>\";";
   html += "  out+=\"<div class='g2'>\";";
@@ -287,7 +287,7 @@ module.exports = async function handler(req, res) {
   html += "document.getElementById('rbtn').addEventListener('click', doLoad);";
   html += "document.getElementById('mc').addEventListener('click', closeM);";
   html += "document.getElementById('modal').addEventListener('click', function(e){if(e.target===this)closeM();});";
-  html += "<\/script></body></html>";
+  html += "</scr" + "ipt></body></html>";
 
   res.status(200).send(html);
 };
