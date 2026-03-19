@@ -134,11 +134,102 @@ URL : https://www.frenchtech-grandparis.com/ft-programs/french-tech-central
 La FTGP organise régulièrement des soirées networking, Find Your Prospect, afterworks, conférences.
 Les dates exactes changent régulièrement. Toujours consulter : https://www.frenchtech-grandparis.com/evenements
 
-=== PARTENAIRES ===
-Partenaires publics : BpiFrance, Région Île-de-France, Métropole Grand Paris, CCI Paris.
-Partenaires privés : AXA, Orange, SNCF, BNP Paribas, Capgemini et autres grands groupes.
-Perks membres : réductions et avantages exclusifs pour les adhérents.
-URL : https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+=== PARTENAIRES PRIVÉS ===
+Page : https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+
+Pour toute question sur les partenaires ou pour devenir partenaire → https://www.frenchtech-grandparis.com/partenaires/les-partenaires-prives
+
+Liste des partenaires privés :
+
+AMGEN — Biotechnologies médicales. Développe des thérapies innovantes pour maladies graves. Présente dans +100 pays.
+
+BREVO — Solution CRM omnicanale. Unifie la relation client (marketing, ventes, conversations, fidélité) sur tous les canaux.
+
+CLIPPERTON — Banque d'affaires spécialisée tech. Conseil en fusions-acquisitions, levées de fonds et LBO.
+
+CONSEIL RÉGIONAL D'ÎLE-DE-FRANCE — Agit sur les transports, lycées, formation professionnelle, développement économique et environnement pour les 12M de Franciliens.
+
+DIGITAL MEDICAL HUB — Open innovation en santé numérique. Accompagnement au développement, positionnement et évaluation d'outils numériques en santé. (Partenaire co-pilote du programme HIIT)
+
+EPSA INNOVATION — Plateforme de solutions pour la performance économique, l'innovation et la transition environnementale des entreprises.
+
+HOLBERTON SCHOOL — École tech : développement web full-stack, IA. Forme aux postes à forte employabilité dans les grandes entreprises tech.
+
+IMPULSA — Hub d'expertise en comptabilité, finance, RH et juridique pour dirigeants d'entreprise. Fondé par deux experts-comptables.
+
+KALAMARI — Agence RP internationale dédiée à la Tech.
+
+MORNING — Espaces de travail, aménagement et événementiel d'entreprise. (Lieu totem French Tech Central)
+
+MÉTROPOLE DU GRAND PARIS — Inter-communalité de 130 communes et 7,2 millions d'habitants.
+
+NONSTOPROD — Agence créative : brand content, interviews, captation d'événements, motion design, podcasts, shooting photo & produit.
+
+OVHCLOUD — Leader européen du cloud. Accompagne les startups avec des solutions ouvertes et scalables.
+⭐ Perks membres : programme startup OVHcloud (12 mois, 100% digital et gratuit, prise en charge exclusive pour membres FTGP).
+
+PENNYLANE — Plateforme de gestion financière tout-en-un : comptabilité pro + gestion financière + compte professionnel.
+⭐ Perks membres : 2 mois d'abonnement offerts à la souscription.
+
+SLITUO — Cabinet de conseil produit et stratégie en outils NoCode pour entrepreneurs.
+⭐ Perks membres : phase de découverte gratuite.
+
+VILLE DE PARIS — Soutient les acteurs de l'innovation pour la transition écologique, économique et sociale.
+
+VIVA TECHNOLOGY — Événement startup & tech n°1 en Europe. Catalyseur de transformation des entreprises et de croissance des startups.
+
+WAVESTONE — Cabinet de conseil en transformation (digitale, cybersécurité, durabilité, IA). +6 000 collaborateurs, présent dans 17 pays.
+
+⭐ = Partenaire avec PERKS disponibles pour les membres adhérents FTGP.
+Pour accéder aux perks → adhérer à la FTGP : https://www.frenchtech-grandparis.com/adhesion
+
+
+=== QUI SOMMES-NOUS ? ===
+Page : https://www.frenchtech-grandparis.com/qui-sommes-nous
+
+NOS MISSIONS :
+- Fédérer les acteurs de l'innovation en créant des passerelles autour de sujets communs
+- Accompagner le développement de l'ensemble des parties prenantes
+- Encourager une collaboration accrue entre les acteurs du territoire francilien
+- Promouvoir l'inclusion, la diversité et la tech éco-responsable
+
+NOTRE ÉQUIPE :
+- Alexandra André — Directrice Générale
+- Clément Derouet — Responsable administratif et financier
+- Brandon Arenales Rodriguez — Chargé de communication
+- Melissa Zoulim — Chargée de programmes
+- Iriantsoa Razafinome — Chargée de programmes
+- Kristina Kashperuk — Chargée de programmes junior
+- Gaspard Schmitt — Chargé de programmes et évènementiel junior
+
+NOTRE BOARD (Bureau) :
+- Lara Rouyres — Présidente, Founder chez Elsee Care
+- Clémence Marchisio — Secrétaire Générale, Senior Manager chez White And Case
+- Reza Malekzadeh — Trésorier, General Partner chez Partech
+- Chafika Chettaoui — Chief Data & AI Officer chez AXA France
+- Gautier Cloix — CEO chez H Company
+- Hélène Labaume — Innovation and Venture Capital Funds Director chez Carrefour Group
+- Olivia Hervy — Chief Ecosystem Officer chez Viva Technology
+- Thierry Vandewalle — Founding Partner chez Wind
+- Houcine Menacer — Founder & CEO chez Winside
+- Maxime Guillaud — CEO chez INSKIP
+- Fanny Sockeel Massart — Co-founder & CEO chez Primaa
+- Thibault Naline — Head of Partnership & Sales chez Lifen
+- Maeva Courtois — Co-Founder & CEO chez Helios
+- Antoine Fourcade — CEO chez Sirius Space
+- Arbia Smiti — CEO & Founder chez Rosaly
+- Laure Cohen — Co-founder & CEO chez Certideal
+- Stéphanie Delestre — CEO-Cofondatrice chez Volubile
+- Benjamin Bitton — Managing Partner chez 2C Finance
+
+NOTRE IMPACT :
+- 355 fonds d'investissements (VCs, Family Offices, Buyout, Dette privée)
+- 8 000 start-ups représentées
+- 130 communes au sein de la Métropole du Grand Paris
+- 438 500 grands groupes, ETI & PME parmi nos membres
+
+RÈGLE : Ne jamais donner les coordonnées personnelles (email, téléphone) des membres de l'équipe ou du board.
+Pour contacter l'équipe → contact@frenchtech-grandparis.com
 
 === CONTACT ===
 Email général : contact@frenchtech-grandparis.com
