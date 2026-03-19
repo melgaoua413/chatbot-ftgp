@@ -1,8 +1,16 @@
 const { createClient } = require("@supabase/supabase-js");
 
+const PASSWORD = process.env.DASHBOARD_PASSWORD || "Iloveyoubaby75002";
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET");
+
+  // Vérification mot de passe
+  if (req.query.json === "1") {
+    var pwd = req.headers["x-dashboard-password"] || "";
+    if (pwd !== PASSWORD) return res.status(401).json({ error: "Non autorisé" });
+  }
 
   // Retourne les données JSON si demandé
   if (req.query.json === "1") {
@@ -86,8 +94,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <span id="upd">Chargement...</span>
   <button class="btn" onclick="load()">↻ Actualiser</button>
 </div>
+<div id="login-screen" style="display:flex;position:fixed;inset:0;background:linear-gradient(135deg,#0045B3,#160B47);align-items:center;justify-content:center;z-index:9999">
+  <div style="background:white;border-radius:20px;padding:40px;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <img src="https://cdn.prod.website-files.com/64a34e8457fd12c08b34c521/64a4ab096ba779243f76749a_coque.svg" style="width:48px;margin-bottom:16px"/>
+    <h2 style="font-size:18px;font-weight:700;color:#160B47;margin-bottom:6px">Dashboard FTGP</h2>
+    <p style="font-size:13px;color:#9BA8C0;margin-bottom:24px">Accès restreint — équipe FTGP</p>
+    <input id="pwd-input" type="password" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()" style="width:100%;padding:12px 16px;border:1.5px solid #EEF2FF;border-radius:10px;font-size:14px;color:#160B47;outline:none;margin-bottom:8px"/>
+    <p id="pwd-err" style="color:#EF4444;font-size:12px;min-height:16px;margin-bottom:12px"></p>
+    <button onclick="login()" style="width:100%;padding:12px;background:linear-gradient(135deg,#0045B3,#160B47);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Accéder →</button>
+  </div>
+</div>
 <div class="container">
-  <div id="app"><div class="loading">⏳ Chargement des données...</div></div>
+  <div id="app"></div>
 </div>
 <script>
 function ago(iso){
@@ -99,10 +117,22 @@ function fdate(iso){
   var d=new Date(iso);
   return("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2);
 }
+var PWD = "";
+function login(){
+  var p = document.getElementById("pwd-input").value;
+  if(!p){ document.getElementById("pwd-err").textContent="Mot de passe requis."; return; }
+  PWD = p;
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("app").innerHTML='<div class="loading">⏳ Chargement des données...</div>';
+  // Ne charge pas au démarrage — attend le login
+}
 function load(){
   document.getElementById("upd").textContent="Actualisation...";
-  fetch("https://chatbot-ftgp.vercel.app/api/dashboard?json=1")
-  .then(function(r){return r.json();})
+  fetch("https://chatbot-ftgp.vercel.app/api/dashboard?json=1", { headers:{"x-dashboard-password": PWD} })
+  .then(function(r){
+    if(r.status===401){ document.getElementById("login-screen").style.display="flex"; document.getElementById("pwd-err").textContent="Mot de passe incorrect."; PWD=""; return Promise.reject("401"); }
+    return r.json();
+  })
   .then(function(d){
     document.getElementById("upd").textContent="Mis à jour à "+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
     var days=Object.entries(d.byDay||{}).sort(function(a,b){return a[0]>b[0]?1:-1;});
