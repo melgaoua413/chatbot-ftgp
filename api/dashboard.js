@@ -42,9 +42,10 @@ module.exports = async function handler(req, res) {
         if(has("hiit")||has("health")||has("sante")||has("sant\u00e9")||has("medtech")||has("healthtech")) topics.hiit++;
         if(has("track ia")||has("track-ia")||has("intelligence artificielle")||has(" ia ")||has(" ai ")) topics.trackia++;
         if(has("bonjour")||has("merci")||has("salut")||has("oui")||has("non")||has("programme")||has("adhesion")) langs.fr++; else langs.en++;
-        q.split(/\s+/).forEach(function(w){
-          w=w.replace(/[^a-zA-ZÀ-ÿ]/g,"");
-          if(w.length>3&&!stop.includes(w)) keywords[w]=(keywords[w]||0)+1;
+        q.split(" ").forEach(function(w){
+          var clean="";
+          for(var i=0;i<w.length;i++){var c=w.charCodeAt(i);if((c>=65&&c<=90)||(c>=97&&c<=122)||(c>=192&&c<=255))clean+=w[i];}
+          if(clean.length>3&&stop.indexOf(clean)===-1) keywords[clean]=(keywords[clean]||0)+1;
         });
       });
       var topKw=Object.entries(keywords).sort(function(a,b){return b[1]-a[1];}).slice(0,20);
