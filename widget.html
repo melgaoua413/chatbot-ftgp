@@ -1,0 +1,288 @@
+<!-- Start of HubSpot Embed Code -->
+<script type="text/javascript" id="hs-script-loader" async defer src="//js-eu1.hs-scripts.com/139613055.js"></script>
+<!-- End of HubSpot Embed Code -->
+<!-- Chatbot French Tech Grand Paris -->
+<script>
+(function() {
+  "use strict";
+  var VERCEL_URL  = "https://chatbot-ftgp.vercel.app";
+  var STORAGE_KEY = "ftgp_v3";
+  var EXPIRY_MS   = 30 * 24 * 60 * 60 * 1000;
+
+  function getTime() {
+    var d = new Date();
+    return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+  }
+  function norm(s) {
+    try { return s.normalize("NFD").replace(/[\u0300-\u036f]/g,""); } catch(e) { return s; }
+  }
+
+  var PROG_NAT = [
+    { name:"Je choisis la French Tech", icon:"💼", color:"#0045B3", desc:"Reverse pitchs avec 11 grands groupes : AXA, Orange, SNCF, BNP... Réservé aux adhérents FTGP.", tags:["Grands comptes","BizDev","National"], url:"https://www.frenchtech-grandparis.com/ft-programs/je-choisis-la-french-tech", cta:"Découvrir le programme" },
+    { name:"French Tech 2030",           icon:"🏭", color:"#1D4ED8", desc:"Programme national pour startups deeptech à fort impact. Géré par Bpifrance.",              tags:["Deeptech","National","Bpifrance"],  url:"https://www.frenchtech-grandparis.com/ft-programs/french-tech-2030", cta:"En savoir plus" },
+    { name:"French Tech Visa",           icon:"✈️", color:"#2563EB", desc:"Pour talents et fondateurs étrangers souhaitant s'installer en France.",                    tags:["International","Visa","National"],  url:"https://www.frenchtech-grandparis.com/ft-programs/ft-visa", cta:"Découvrir le Visa" },
+    { name:"NEXT40 / FT120",             icon:"🏆", color:"#1E3A8A", desc:"Label national pour les 120 startups françaises à plus fort potentiel.",                    tags:["Label","National","Croissance"],   url:"https://www.frenchtech-grandparis.com/ft-programs/next40-120", cta:"En savoir plus" },
+    { name:"French Tech Tremplin",       icon:"🚀", color:"#7C3AED", desc:"Pour entrepreneurs issus de milieux sous-représentés. Bourse + accompagnement. Gratuit.",   tags:["Diversité","Bourse","National"],   url:"https://www.frenchtech-grandparis.com/ft-programs/french-tech-tremplin", cta:"Candidater à Tremplin" },
+    { name:"French Tech Central",        icon:"🏛️", color:"#374151", desc:"RDV 1-to-1 avec +60 administrations : INPI, Bpifrance, URSSAF...",                          tags:["Services publics","Admin"],        url:"https://www.frenchtech-grandparis.com/ft-programs/french-tech-central", cta:"Prendre un RDV" }
+  ];
+  var PROG_LOCAL = [
+    { name:"Scale-up Excellence",             icon:"📈", color:"#160B47", desc:"Pour scale-ups à fort potentiel. Détection futurs Next40/FT120.",              tags:["Scale","Accompagnement"],         url:"https://www.frenchtech-grandparis.com/ft-programs/scale-up-excellence", cta:"Découvrir Scale-up" },
+    { name:"Track Intelligence Artificielle", icon:"🤖", color:"#0045B3", desc:"Pour startups IA. +150 grands groupes, masterclasses, cartographie IA.",       tags:["BizDev","IA","Visibilité"],       url:"https://www.frenchtech-grandparis.com/ft-programs/track-intelligence-artificielle", cta:"Rejoindre le Track IA" },
+    { name:"Gen50Tech",                       icon:"🤝", color:"#D97706", desc:"Combat l'âgisme dans la tech. Pour entreprises engagées pour les +50 ans.",   tags:["Inclusion","RH","Diversité"],     url:"https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis", cta:"Signer la charte" },
+    { name:"Ville de Demain",                 icon:"🏙️", color:"#059669", desc:"Pour startups solutions collectivités. 130 communes Métropole Grand Paris.", tags:["Smart City","Collectivités"],     url:"https://www.frenchtech-grandparis.com/ft-programs/ville-de-demain", cta:"Rejoindre Ville de Demain" },
+    { name:"HIIT — HealthTech",               icon:"💊", color:"#0E7490", desc:"Programme intensif 1 semaine pour startups MedTech pré-cliniques. Gratuit.", tags:["MedTech","Santé","Gratuit"],      url:"https://www.frenchtech-grandparis.com/ft-programs/hiit", cta:"Candidater à HIIT" },
+    { name:"Balance Pas ton PC",              icon:"⚖️", color:"#BE185D", desc:"Programme contre les discriminations dans la tech.",                          tags:["Inclusion","Diversité","Tech"],   url:"https://www.frenchtech-grandparis.com/programmes", cta:"En savoir plus" }
+  ];
+
+  var WELCOME = {
+    fr: "👋 Bonjour ! Je suis l'assistant de la <strong>French Tech Grand Paris</strong>.<br><br>Programmes, événements, adhésion... pose ta question !",
+    en: "👋 Hello! I'm the <strong>French Tech Grand Paris</strong> assistant.<br><br>Programmes, events, membership... ask me anything!"
+  };
+  var SUGG = {
+    fr: ["📅 Prochains événements","🚀 C'est quoi le Track IA ?","💊 Candidater à HIIT ?","🤝 Comment adhérer ?"],
+    en: ["📅 Upcoming events","🚀 What is Track IA?","💊 Apply to HIIT?","🤝 How to join?"]
+  };
+
+  var css =
+    "#ftgp-launcher{position:fixed;bottom:28px;right:28px;display:flex;align-items:center;gap:10px;z-index:2147483647;flex-direction:row-reverse}" +
+    "#ftgp-btn{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#0045B3,#160B47);border:none;cursor:pointer;box-shadow:0 4px 24px rgba(0,69,179,.5);display:flex;align-items:center;justify-content:center;transition:transform .2s;flex-shrink:0;position:relative}" +
+    "#ftgp-btn:hover{transform:scale(1.08)}" +
+    "#ftgp-btn .notif{position:absolute;top:3px;right:3px;width:11px;height:11px;background:#22C55E;border-radius:50%;border:2px solid #fff}" +
+    "#ftgp-bubble{background:white;color:#160B47;font-size:13px;font-weight:600;padding:10px 16px;border-radius:22px;box-shadow:0 4px 20px rgba(22,11,71,.13);white-space:nowrap;cursor:pointer;border:1.5px solid #EBF0FF;animation:ftgp-bubble-in .4s cubic-bezier(.34,1.56,.64,1)}" +
+    "@keyframes ftgp-bubble-in{0%{opacity:0;transform:translateX(10px) scale(.9)}100%{opacity:1;transform:translateX(0) scale(1)}}" +
+    "#ftgp-box{position:fixed;bottom:104px;right:28px;width:400px;height:590px;background:#fff;border-radius:22px;z-index:2147483646;box-shadow:0 16px 56px rgba(22,11,71,.22);display:none;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;transform:translateY(12px);opacity:0;transition:width .3s,height .3s,transform .28s cubic-bezier(.34,1.56,.64,1),opacity .22s}" +
+    "#ftgp-box.open{transform:translateY(0);opacity:1}" +
+    "#ftgp-box.expanded{width:760px;height:720px}" +
+    "#ftgp-head{background:linear-gradient(135deg,#0045B3,#160B47);padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}" +
+    "#ftgp-head .logo{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid rgba(255,255,255,.25)}" +
+    "#ftgp-head .logo img{width:28px;height:28px;object-fit:contain}" +
+    "#ftgp-head .info{flex:1}" +
+    "#ftgp-head .hname{color:#fff;font-weight:700;font-size:13px}" +
+    "#ftgp-head .hstatus{color:rgba(255,255,255,.75);font-size:11px;display:flex;align-items:center;gap:4px;margin-top:2px}" +
+    "#ftgp-head .hstatus::before{content:'';width:6px;height:6px;background:#22C55E;border-radius:50%;display:inline-block}" +
+    ".ftgp-hbtn{background:rgba(255,255,255,.12);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:background .2s}" +
+    ".ftgp-hbtn:hover{background:rgba(255,255,255,.28)}" +
+    "#ftgp-sub{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:#F7F9FF;border-bottom:1px solid #EBF0FF;flex-shrink:0}" +
+    ".ftgp-flang{background:rgba(0,69,179,.07);border:1.5px solid rgba(0,69,179,.15);border-radius:8px;cursor:pointer;width:28px;height:28px;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .18s;padding:0}" +
+    ".ftgp-flang.active{background:#0045B3;border-color:#0045B3}" +
+    "#ftgp-clearbtn{background:none;border:none;cursor:pointer;font-size:11px;color:#9BA8C0;display:flex;align-items:center;gap:4px;padding:0;transition:color .18s}" +
+    "#ftgp-clearbtn:hover{color:#EF4444}" +
+    "#ftgp-msgs{flex:1;overflow-y:scroll;padding:14px 14px 8px;display:flex;flex-direction:column;gap:10px;background:#F7F9FF;scroll-behavior:smooth;cursor:default}" +
+    "#ftgp-msgs::-webkit-scrollbar{width:5px}" +
+    "#ftgp-msgs::-webkit-scrollbar-track{background:#EEF2FF;border-radius:10px}" +
+    "#ftgp-msgs::-webkit-scrollbar-thumb{background:#B8C8F0;border-radius:10px}" +
+    "#ftgp-msgs::-webkit-scrollbar-thumb:hover{background:#0045B3}" +
+    ".ftgp-fm{max-width:86%;display:flex;flex-direction:column;gap:4px}" +
+    ".ftgp-fm.bot{align-self:flex-start}" +
+    ".ftgp-fm.user{align-self:flex-end}" +
+    ".ftgp-fm.full{max-width:100%}" +
+    ".ftgp-fm .bubble{padding:11px 14px;font-size:14px;line-height:1.65;word-break:break-word}" +
+    ".ftgp-fm.bot .bubble{background:#fff;color:#160B47;border-radius:18px 18px 18px 4px;box-shadow:0 2px 8px rgba(0,0,0,.07)}" +
+    ".ftgp-fm.user .bubble{background:linear-gradient(135deg,#0045B3,#0056D6);color:#fff;border-radius:18px 18px 4px 18px}" +
+    ".ftgp-fm .meta{font-size:10px;color:#A0AECB;padding:0 4px;display:flex;align-items:center;gap:6px}" +
+    ".ftgp-fm.user .meta{justify-content:flex-end}" +
+    ".ftgp-fm a{color:#0045B3;text-decoration:underline;font-weight:600}" +
+    ".ftgp-fm.user a{color:#fff}" +
+    ".ftgp-fm strong{font-weight:700}" +
+    ".ftgp-fm ul{margin:6px 0 4px 16px;padding:0}" +
+    ".ftgp-fm li{margin-bottom:3px}" +
+    ".ftgp-editbtn{background:none;border:none;color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;padding:0;display:none}" +
+    ".ftgp-fm.user:hover .ftgp-editbtn{display:inline}" +
+    ".ftgp-reacts{display:flex;gap:6px;margin-top:6px}" +
+    ".ftgp-rbtn{display:inline-flex;align-items:center;justify-content:center;font-size:16px;width:34px;height:34px;border-radius:50%;background:#fff;border:1.5px solid #E0E8F8;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;user-select:none;-webkit-user-select:none;transition:transform .15s,border-color .15s}" +
+    ".ftgp-rbtn:hover{transform:scale(1.15);border-color:#0045B3}" +
+    ".ftgp-rbtn.liked{background:#DCFCE7;border-color:#22C55E}" +
+    ".ftgp-rbtn.disliked{background:#FEE2E2;border-color:#EF4444}" +
+    ".ftgp-orb-wrap{align-self:flex-start;display:flex;align-items:center;gap:8px;background:#fff;padding:10px 14px;border-radius:18px 18px 18px 4px;box-shadow:0 2px 8px rgba(0,0,0,.06)}" +
+    ".ftgp-orb{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#60A5FA,#0045B3,#160B47,#3B82F6);background-size:300% 300%;animation:ftgp-orb 2.4s ease-in-out infinite}" +
+    "@keyframes ftgp-orb{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}" +
+    ".ftgp-orb-txt{font-size:12px;color:#8A96B8;font-style:italic}" +
+    ".ftgp-cards{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:8px}" +
+    ".ftgp-card{border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);transition:transform .18s}" +
+    ".ftgp-card:hover{transform:translateY(-2px)}" +
+    ".ftgp-card-head{padding:12px 14px;display:flex;align-items:center;gap:10px}" +
+    ".ftgp-card-title{color:#fff;font-weight:700;font-size:14px}" +
+    ".ftgp-card-body{background:#fff;padding:10px 14px}" +
+    ".ftgp-card-desc{font-size:13px;color:#374151;line-height:1.5;margin-bottom:8px}" +
+    ".ftgp-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}" +
+    ".ftgp-tag{background:#EEF2FF;color:#0045B3;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500}" +
+    ".ftgp-card-btn{display:block;width:100%;padding:10px;border-radius:10px;border:none;color:#fff;font-weight:700;font-size:13px;text-align:center;text-decoration:none;transition:opacity .2s;box-sizing:border-box}" +
+    ".ftgp-card-btn:hover{opacity:.88;color:#fff}" +
+    ".ftgp-refine{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;flex-direction:column;gap:10px;width:100%}" +
+    ".ftgp-qopts{display:flex;flex-wrap:wrap;gap:8px}" +
+    ".ftgp-qopt{background:#fff;border:1.5px solid #C8D8F8;color:#0045B3;border-radius:20px;padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;transition:all .18s;text-align:left}" +
+    ".ftgp-qopt:hover:not(:disabled){background:#0045B3;color:#fff;border-color:#0045B3}" +
+    ".ftgp-qopt:disabled{cursor:default}" +
+    "#ftgp-suggs{padding:8px 12px 4px;display:flex;flex-wrap:wrap;gap:6px;background:#F7F9FF;border-top:1px solid #EBF0FF;flex-shrink:0}" +
+    ".ftgp-sugg{background:#fff;border:1.5px solid #C8D8F8;color:#0045B3;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .22s;white-space:nowrap;font-weight:500}" +
+    ".ftgp-sugg:hover{background:linear-gradient(135deg,#0045B3,#160B47);color:#fff;border-color:transparent}" +
+    "#ftgp-inp{display:flex;padding:10px 12px;gap:6px;background:#fff;border-top:1px solid #EBF0FF;align-items:center;flex-shrink:0}" +
+    "#ftgp-input{flex:1;border:1.5px solid #E0E8F8;border-radius:14px;padding:10px 14px;font-size:14px;outline:none;background:#F7F9FF;transition:border .2s;color:#160B47}" +
+    "#ftgp-input:focus{border-color:#0045B3;background:#fff}" +
+    ".ftgp-ibtn{width:40px;height:40px;background:#fff;border:1.5px solid #E0E8F8;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;text-decoration:none}" +
+    ".ftgp-ibtn:hover{border-color:#0045B3;background:#EEF2FF}" +
+    "#ftgp-mic.listening{background:linear-gradient(135deg,#FEE2E2,#FECACA);border-color:#EF4444;animation:ftgp-micpulse 1s ease-in-out infinite}" +
+    "@keyframes ftgp-micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}" +
+    "#ftgp-send{width:40px;height:40px;background:linear-gradient(135deg,#0045B3,#160B47);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .18s;flex-shrink:0;box-shadow:0 2px 8px rgba(0,69,179,.3)}" +
+    "#ftgp-send:hover{transform:scale(1.06)}" +
+    "#ftgp-send:disabled{opacity:.45;cursor:not-allowed;transform:none}" +
+    "#ftgp-powered{text-align:center;font-size:10px;color:#A0AECB;padding:5px 8px;background:#fff;flex-shrink:0}" +
+    "@media(max-width:500px){#ftgp-box,#ftgp-box.expanded{width:calc(100vw - 16px);right:8px;bottom:80px}#ftgp-bubble{display:none}}";
+
+  var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+
+  document.body.insertAdjacentHTML("beforeend",
+    '<div id="ftgp-launcher">'+
+      '<button id="ftgp-btn"><svg width="22" height="22" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><div class="notif"></div></button>'+
+      '<div id="ftgp-bubble">💬 Une question ? Je suis là !</div>'+
+    '</div>'+
+    '<div id="ftgp-box">'+
+      '<div id="ftgp-head">'+
+        '<div class="logo"><img src="https://cdn.prod.website-files.com/64a34e8457fd12c08b34c521/64a4ab096ba779243f76749a_coque.svg" alt="FTGP"/></div>'+
+        '<div class="info"><div class="hname">Assistant French Tech Grand Paris</div><div class="hstatus">En ligne · répond en quelques secondes</div></div>'+
+        '<button class="ftgp-hbtn" id="ftgp-expand">⤢</button>'+
+        '<button class="ftgp-hbtn" id="ftgp-close">✕</button>'+
+      '</div>'+
+      '<div id="ftgp-sub">'+
+        '<div style="display:flex;gap:5px">'+
+          '<button class="ftgp-flang active" id="ftgp-lang-fr">🇫🇷</button>'+
+          '<button class="ftgp-flang" id="ftgp-lang-en">🇬🇧</button>'+
+        '</div>'+
+        '<button id="ftgp-clearbtn"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Effacer</button>'+
+      '</div>'+
+      '<div id="ftgp-msgs"></div>'+
+      '<div id="ftgp-suggs"></div>'+
+      '<div id="ftgp-inp">'+
+        '<input type="text" id="ftgp-input" placeholder="Pose ta question..."/>'+
+        '<button id="ftgp-mic" class="ftgp-ibtn"><svg width="15" height="15" fill="none" stroke="#0045B3" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg></button>'+
+        '<a href="https://www.linkedin.com/company/frenchtechgrandparis/" target="_blank" class="ftgp-ibtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0045B3"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>'+
+        '<button id="ftgp-send"><svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>'+
+      '</div>'+
+      '<div id="ftgp-powered">Propulsé par <strong>Claude AI</strong> · French Tech Grand Paris</div>'+
+    '</div>'
+  );
+
+  var btn=document.getElementById("ftgp-btn"),bubble=document.getElementById("ftgp-bubble"),box=document.getElementById("ftgp-box"),expandBtn=document.getElementById("ftgp-expand"),closeBtn=document.getElementById("ftgp-close"),clearBtn=document.getElementById("ftgp-clearbtn"),input=document.getElementById("ftgp-input"),sendBtn=document.getElementById("ftgp-send"),micBtn=document.getElementById("ftgp-mic"),msgs=document.getElementById("ftgp-msgs"),suggsEl=document.getElementById("ftgp-suggs"),langFr=document.getElementById("ftgp-lang-fr"),langEn=document.getElementById("ftgp-lang-en");
+  var history=[],sessionId="s-"+Date.now(),isOpen=false,isExpanded=false,mid=0,unknownCount=0,lang="fr",suggsGone=false;
+
+  function setLang(l){lang=l;try{localStorage.setItem("ftgp_lang",l);}catch(e){}langFr.classList.toggle("active",l==="fr");langEn.classList.toggle("active",l==="en");input.placeholder=l==="en"?"Ask your question...":"Pose ta question...";if(mid===0){var fb=msgs.querySelector(".ftgp-fm.bot .bubble");if(fb)fb.innerHTML=WELCOME[l]||WELCOME.fr;}renderSuggs();}
+  langFr.onclick=function(){setLang("fr");};langEn.onclick=function(){setLang("en");};
+
+  function renderSuggs(){suggsEl.innerHTML="";if(suggsGone)return;(SUGG[lang]||SUGG.fr).forEach(function(s){var b=document.createElement("button");b.className="ftgp-sugg";b.textContent=s;b.onclick=function(){input.value=s;suggsGone=true;suggsEl.innerHTML="";sendMsg();};suggsEl.appendChild(b);});}
+
+  function save(){try{var rows=[];msgs.querySelectorAll(".ftgp-fm").forEach(function(el){var b=el.querySelector(".bubble");if(!b)return;var m=el.querySelector(".meta");rows.push({role:el.classList.contains("user")?"user":"bot",html:b.innerHTML,time:m?m.textContent.replace("✏️ Modifier","").trim():getTime(),full:el.classList.contains("full")});});localStorage.setItem(STORAGE_KEY,JSON.stringify({rows:rows.slice(-30),history:history.slice(-10),session:sessionId,unknown:unknownCount,lang:lang,at:Date.now()}));}catch(e){}}
+
+  function clearAll(){try{localStorage.removeItem(STORAGE_KEY);}catch(e){}history=[];unknownCount=0;mid=0;suggsGone=false;msgs.innerHTML="";addWelcome();renderSuggs();}
+
+  function loadSaved(){try{var raw=localStorage.getItem(STORAGE_KEY);if(!raw)return false;var p=JSON.parse(raw);if(!p.at||Date.now()-p.at>EXPIRY_MS){localStorage.removeItem(STORAGE_KEY);return false;}if(p.history)history=p.history;if(p.session)sessionId=p.session;if(p.unknown)unknownCount=p.unknown||0;if(p.lang)lang=p.lang;if(p.rows&&p.rows.length){var d=new Date(p.at);var banner=document.createElement("div");banner.style.cssText="text-align:center;font-size:11px;color:#9BA8C0;background:#EEF2FF;border-radius:20px;padding:4px 12px;align-self:center;";banner.textContent="— Conversation du "+("0"+d.getDate()).slice(-2)+"/"+("0"+(d.getMonth()+1)).slice(-2)+" —";msgs.appendChild(banner);p.rows.forEach(function(r){mid++;var id=mid;var w=document.createElement("div");w.className="ftgp-fm "+r.role+(r.full?" full":"");w.id="ftgp-m"+id;w.dataset.dislikes="0";var bEl=document.createElement("div");bEl.className="bubble";bEl.innerHTML=r.html;var mEl=document.createElement("div");mEl.className="meta";mEl.textContent=r.time||"";w.appendChild(bEl);w.appendChild(mEl);if(r.role==="bot"){w.appendChild(makeReacts(id));}msgs.appendChild(w);});return true;}}catch(e){}return false;}
+
+  var had=loadSaved();
+  function addWelcome(){var w=document.createElement("div");w.className="ftgp-fm bot";w.innerHTML='<div class="bubble">'+(WELCOME[lang]||WELCOME.fr)+'</div><div class="meta">'+getTime()+'</div>';msgs.appendChild(w);}
+  if(!had)addWelcome();if(!had)renderSuggs();else suggsGone=true;
+  langFr.classList.toggle("active",lang==="fr");langEn.classList.toggle("active",lang==="en");
+  input.placeholder=lang==="en"?"Ask your question...":"Pose ta question...";
+  setTimeout(function(){if(bubble)bubble.style.display="none";},6000);
+
+  function openChat(){box.style.display="flex";setTimeout(function(){box.classList.add("open");},10);isOpen=true;input.focus();msgs.scrollTop=msgs.scrollHeight;if(bubble)bubble.style.display="none";}
+  function closeChat(){box.classList.remove("open");setTimeout(function(){box.style.display="none";},280);isOpen=false;}
+  btn.onclick=function(){isOpen?closeChat():openChat();};
+  bubble.onclick=openChat;
+  closeBtn.onclick=closeChat;
+  expandBtn.onclick=function(){isExpanded=!isExpanded;box.classList.toggle("expanded",isExpanded);expandBtn.textContent=isExpanded?"⤡":"⤢";};
+  clearBtn.onclick=function(){if(confirm("Effacer toute la conversation ?"))clearAll();};
+
+  var recog=null;
+  if("webkitSpeechRecognition"in window||"SpeechRecognition"in window){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;recog=new SR();recog.continuous=false;recog.interimResults=true;recog.onstart=function(){micBtn.classList.add("listening");input.placeholder="🎤 Parle... puis clique Envoyer";};recog.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;input.value=t;if(e.results[e.results.length-1].isFinal){micBtn.classList.remove("listening");input.placeholder=lang==="en"?"Ask your question...":"Pose ta question...";input.focus();}};recog.onerror=recog.onend=function(){micBtn.classList.remove("listening");input.placeholder=lang==="en"?"Ask your question...":"Pose ta question...";};micBtn.onclick=function(){micBtn.classList.contains("listening")?recog.stop():(recog.lang=lang==="en"?"en-US":"fr-FR",recog.start());};}else{micBtn.style.display="none";}
+
+  function md(t){return t.replace(/^### (.+)$/gm,"<div style='font-weight:700;font-size:13px;color:#160B47;margin:8px 0 4px'>$1</div>").replace(/^## (.+)$/gm,"<div style='font-weight:700;font-size:14px;color:#0045B3;margin:10px 0 4px;border-bottom:1px solid #EEF2FF;padding-bottom:4px'>$1</div>").replace(/^# (.+)$/gm,"<div style='font-weight:700;font-size:15px;color:#160B47;margin:10px 0 6px'>$1</div>").replace(/^---+$/gm,"<hr style='border:none;border-top:1px solid #EEF2FF;margin:8px 0'/>").replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g,'<a href="$2" target="_blank" rel="noopener"><strong>$1</strong></a>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\*\*\*([^*]+)\*\*\*/g,"<strong><em>$1</em></strong>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/\*([^*\n]+)\*/g,"<em>$1</em>").replace(/^[•\-]\s+(.+)$/gm,"<li>$1</li>").replace(/(<li>[^<]*<\/li>\n?)+/g,function(m){return "<ul style='margin:6px 0 4px 16px;padding:0'>"+m+"</ul>";}).replace(/\n/g,"<br>");}
+
+  function makeReacts(id){
+    var wrap=document.createElement("div");wrap.className="ftgp-reacts";
+    var likeBtn=document.createElement("button");likeBtn.type="button";likeBtn.className="ftgp-rbtn";likeBtn.textContent="👍";
+    var disBtn=document.createElement("button");disBtn.type="button";disBtn.className="ftgp-rbtn";disBtn.textContent="👎";
+    likeBtn.onclick=function(){
+      if(likeBtn.dataset.used)return;likeBtn.dataset.used="1";
+      likeBtn.classList.add("liked");disBtn.disabled=true;disBtn.style.opacity="0.3";
+      var happy=document.createElement("div");happy.className="ftgp-fm bot";
+      happy.innerHTML='<div class="bubble" style="background:#DCFCE7;border-radius:18px 18px 18px 4px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:14px;color:#166534;padding:11px 14px">😊 Ravie d\'avoir pu t\'aider ! N\'hésite pas si tu as d\'autres questions.</div>';
+      msgs.appendChild(happy);msgs.scrollTop=msgs.scrollHeight;
+    };
+    disBtn.onclick=function(){
+      if(disBtn.dataset.used)return;disBtn.dataset.used="1";
+      disBtn.classList.add("disliked");likeBtn.disabled=true;likeBtn.style.opacity="0.3";
+      var wrap2=document.getElementById("ftgp-m"+id);
+      var q=wrap2?(wrap2.dataset.q||""):"";
+      var a=wrap2?(wrap2.dataset.a||""):"";
+      startRefine(id,q,[],1,a,false);
+    };
+    wrap.appendChild(likeBtn);wrap.appendChild(disBtn);return wrap;
+  }
+
+  function buildCard(p){return '<div class="ftgp-card"><div class="ftgp-card-head" style="background:'+p.color+'"><span style="font-size:20px">'+p.icon+'</span><span class="ftgp-card-title">'+p.name+'</span></div><div class="ftgp-card-body"><div class="ftgp-card-desc">'+p.desc+'</div><div class="ftgp-card-tags">'+p.tags.map(function(t){return'<span class="ftgp-tag">'+t+'</span>';}).join("")+'</div><a href="'+p.url+'" target="_blank" class="ftgp-card-btn" style="background:'+p.color+'">'+p.cta+' →</a></div></div>';}
+
+  function buildCards(){var h='<div style="font-size:11px;font-weight:700;color:#9BA8C0;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">🇫🇷 Programmes nationaux</div>';h+='<div class="ftgp-cards">'+PROG_NAT.map(buildCard).join("")+'</div>';h+='<div style="font-size:11px;font-weight:700;color:#9BA8C0;letter-spacing:1px;text-transform:uppercase;margin:14px 0 6px">📍 Programmes French Tech Grand Paris</div>';h+='<div class="ftgp-cards">'+PROG_LOCAL.map(buildCard).join("")+'</div>';return h;}
+
+  function buildContact(){return '<div style="background:linear-gradient(135deg,#F8FAFF,#EEF2FF);border:1.5px solid #C8D8F8;border-radius:16px;padding:14px 16px;width:100%;display:flex;flex-direction:column;gap:12px;box-sizing:border-box"><div style="display:flex;align-items:center;gap:10px"><div style="width:42px;height:42px;border-radius:12px;background:#fff;border:1.5px solid #C8D8F8;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="https://cdn.prod.website-files.com/64a34e8457fd12c08b34c521/64a4ab096ba779243f76749a_coque.svg" style="width:28px;height:28px;object-fit:contain" alt="FTGP"/></div><div><div style="font-weight:700;font-size:14px;color:#160B47">Besoin d\'un contact humain ?</div><div style="font-size:12px;color:#6B7A9F;margin-top:2px">Notre équipe répond rapidement</div></div></div><a href="mailto:contact@frenchtech-grandparis.com" style="display:block;background:linear-gradient(135deg,#0045B3,#160B47);color:#fff;text-decoration:none;text-align:center;padding:10px;border-radius:11px;font-weight:700;font-size:13px">Contactez directement ici <span style="opacity:.8;font-weight:400">(répondent rapidement)</span></a><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:1px;background:#C8D8F8"></div><span style="font-size:11px;color:#9BA8C0;white-space:nowrap">Entre temps</span><div style="flex:1;height:1px;background:#C8D8F8"></div></div><a href="https://airtable.com/appv5cXO7MVspaMp8/pagjnriyF9NFBDfxJ/form" target="_blank" style="display:block;background:#fff;border:1.5px solid #0045B3;color:#0045B3;text-decoration:none;text-align:center;padding:10px;border-radius:11px;font-weight:700;font-size:13px">Remplir le formulaire →</a></div>';}
+
+  function isProgs(t){return /quels.{0,20}programmes|liste.{0,15}programme|tous les programmes|nos programmes|vos programmes|que proposez|c.est quoi vos programmes/i.test(norm(t.toLowerCase()));}
+
+  function addBot(html,showCards,question){mid++;var id=mid;var w=document.createElement("div");w.className="ftgp-fm bot"+(showCards?" full":"");w.id="ftgp-m"+id;w.dataset.q=question||"";w.dataset.a=html;w.dataset.dislikes="0";var b=document.createElement("div");b.className="bubble";b.innerHTML=md(html);var m=document.createElement("div");m.className="meta";m.textContent=getTime();w.appendChild(b);w.appendChild(m);w.appendChild(makeReacts(id));if(showCards){var cd=document.createElement("div");cd.innerHTML=buildCards();while(cd.firstChild)w.appendChild(cd.firstChild);}msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;save();}
+
+  function addUser(text){mid++;var id=mid;var w=document.createElement("div");w.className="ftgp-fm user";w.id="ftgp-m"+id;w.dataset.text=text;var b=document.createElement("div");b.className="bubble";b.textContent=text;var m=document.createElement("div");m.className="meta";var eb=document.createElement("button");eb.className="ftgp-editbtn";eb.textContent="✏️ Modifier";eb.onclick=function(){var ew=document.getElementById("ftgp-m"+id);if(ew){input.value=ew.dataset.text||"";ew.remove();input.focus();}};m.appendChild(eb);m.appendChild(document.createTextNode(getTime()));w.appendChild(b);w.appendChild(m);msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;}
+
+  function addOrb(){var o=document.createElement("div");o.className="ftgp-orb-wrap";o.id="ftgp-orb";o.innerHTML='<div class="ftgp-orb"></div><span class="ftgp-orb-txt">'+(lang==="en"?"Thinking...":"En train de réfléchir...")+'</span>';msgs.appendChild(o);msgs.scrollTop=msgs.scrollHeight;}
+  function rmOrb(){var o=document.getElementById("ftgp-orb");if(o)o.remove();}
+
+  function startRefine(msgId,q,path,step,lastA,adaptive){
+    var elId="ftgp-ref-"+msgId+"-"+step;
+    var el=document.createElement("div");el.className="ftgp-fm bot full";el.id=elId;
+    el.innerHTML='<div class="ftgp-orb-wrap"><div class="ftgp-orb"></div><span class="ftgp-orb-txt">'+(adaptive?(lang==="en"?"Analysing...":"Analyse en cours..."):(lang==="en"?"Let\'s refine...":"Précisons ta demande..."))+'</span></div>';
+    msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;
+    fetch(VERCEL_URL+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,mode:"refine",session_id:sessionId,history:[],refine_step:step,refine_path:path,last_answer:lastA,lang:lang})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var el2=document.getElementById(elId);if(!el2)return;
+      if(d.final_answer){el2.innerHTML='<div class="bubble" style="background:#fff;border-radius:18px 18px 18px 4px;box-shadow:0 2px 8px rgba(0,0,0,.07);font-size:14px;color:#160B47;line-height:1.65">'+md(d.final_answer)+'</div>';msgs.scrollTop=msgs.scrollHeight;return;}
+      var sn=d.refine_step||step;var cur=adaptive?sn-10:sn;var prog=cur+"/4";
+      var title=adaptive?(lang==="en"?"Dig deeper":"Affinons davantage"):(lang==="en"?"Refine your question":"Affinons ta demande");
+      var optsDiv=document.createElement("div");optsDiv.className="ftgp-qopts";
+      (d.options||[]).forEach(function(o){
+        var btn=document.createElement("button");btn.className="ftgp-qopt";btn.type="button";btn.textContent=o;
+        btn.onclick=function(){
+          if(btn.disabled)return;
+          optsDiv.querySelectorAll(".ftgp-qopt").forEach(function(b){b.disabled=true;b.style.opacity="0.4";b.style.pointerEvents="none";});
+          btn.style.background="#0045B3";btn.style.color="#fff";btn.style.opacity="1";btn.style.borderColor="#0045B3";btn.style.pointerEvents="none";
+          startRefine(msgId,q,path.concat([o]),sn+1,lastA,adaptive);
+        };
+        optsDiv.appendChild(btn);
+      });
+      var refineDiv=document.createElement("div");refineDiv.className="ftgp-refine";
+      refineDiv.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700;font-size:13px;color:#160B47">'+title+'</div><div style="font-size:11px;color:#9BA8C0;background:#EEF2FF;padding:2px 8px;border-radius:20px">'+prog+'</div></div><div style="font-size:12px;color:#6B7A9F">'+(d.question||"")+'</div>';
+      refineDiv.appendChild(optsDiv);el2.innerHTML="";el2.appendChild(refineDiv);msgs.scrollTop=msgs.scrollHeight;
+    })
+    .catch(function(){var el2=document.getElementById(elId);if(el2)el2.remove();});
+  }
+
+  function sendMsg(){
+    var msg=input.value.trim();if(!msg)return;
+    input.value="";suggsGone=true;suggsEl.innerHTML="";
+    addUser(msg);history.push({role:"user",content:msg});save();
+    addOrb();sendBtn.disabled=true;
+    fetch(VERCEL_URL+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg,session_id:sessionId,history:history,mode:"chat",unknown_count:unknownCount,lang:lang})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      rmOrb();
+      var intro=lang==="en"?"Here are all **French Tech Grand Paris** programmes:":"Voici tous les programmes de la **French Tech Grand Paris** :";
+      if(isProgs(msg))addBot(intro,true,msg);else addBot(d.reply||"",false,msg);
+      if(d.unknown_count!==undefined)unknownCount=d.unknown_count;
+      if(d.escalade){setTimeout(function(){var ce=document.createElement("div");ce.className="ftgp-fm bot full";ce.innerHTML=buildContact();msgs.appendChild(ce);msgs.scrollTop=msgs.scrollHeight;},400);}
+      history.push({role:"assistant",content:d.reply||""});save();sendBtn.disabled=false;
+    })
+    .catch(function(){rmOrb();addBot(lang==="en"?"Connection error. [Contact us](https://www.frenchtech-grandparis.com/contact).":"Erreur de connexion. [Contacte-nous](https://www.frenchtech-grandparis.com/contact).",false,msg);sendBtn.disabled=false;});
+  }
+
+  sendBtn.onclick=sendMsg;
+  input.addEventListener("keydown",function(e){if(e.key==="Enter")sendMsg();});
+
+})();
+</script>
