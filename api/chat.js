@@ -190,11 +190,42 @@ Adhésion FTGP obligatoire.
 
 --- GEN50TECH ---
 URL : https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis
-Description : Programme dédié à la lutte contre l'âgisme dans les entreprises tech et à la valorisation des talents de +50 ans.
-Cible : Entreprises tech souhaitant s'engager contre l'âgisme. Adhésion FTGP obligatoire.
-Format : Signature d'une charte d'engagement + actions RH concrètes pour les talents +50 ans
-Ce que ça apporte : label, réseau d'entreprises engagées, outils RH, visibilité
-Adhésion FTGP obligatoire.
+Description : Programme qui met l'accent sur l'inclusion dans la tech en intégrant les +50 ans, en valorisant leur expérience et en facilitant leur accès aux opportunités professionnelles. Lancé par la French Tech Grand Paris sous le nom "Recrutement +50 ans dans la Tech".
+Chiffres clés :
+- 99+ entreprises et acteurs tech engagés (startups, scale-ups, fonds, incubateurs, grands groupes)
+- 7,7% seulement des salariés en startup tech ont plus de 45 ans (source : solutions-numeriques.com)
+- 2,4% de salariés de plus de 55 ans dans la French Tech Grand Paris
+- 63% des postes dans la Tech peinent à être pourvus faute de candidatures adaptées (Étude French Tech 2023)
+Cible : Entreprises tech, incubateurs et fonds souhaitant s'engager contre l'âgisme et recruter des talents +50 ans. Ouvert à tout l'écosystème tech.
+La charte GEN50TECH — 7 engagements :
+1. Lutter activement contre l'âgisme et le senior washing
+2. Recruter à tout âge, à tous les niveaux
+3. Construire des équipes intergénérationnelles
+4. Mesurer, partager et progresser
+5. S'inscrire dans une dynamique collective
+6. Principes d'action concrets
+7. Mobiliser l'écosystème via les incubateurs et les fonds
+Ce que ça apporte :
+- Toolkit opérationnel remis après signature de la charte
+- Ateliers trimestriels (50+ organisations par atelier)
+- Job datings dédiés pour connecter entreprises et talents 50+
+- Assistant virtuel pour rendre les offres d'emploi plus inclusives (scoring d'inclusivité)
+- Accès à la Task Force pluridisciplinaire Gen50Tech
+- Partage de retours d'expérience et ROI post-recrutement
+- Visibilité dans l'écosystème et à VivaTech
+Temps forts :
+- Cérémonie de signature à VivaTech 2025 avec 110+ organisations présentes
+- Présence de représentants de l'État (Astrid Panosyan-Bouvet, ministre du Travail ; Clara Chappaz, ex-ministre IA & Numérique)
+Task Force active : Brevo, Lydia, Serena, Winside, OMS & Co, Maximis RH
+Parcours d'engagement :
+1. Remplir le formulaire d'engagement
+2. Validation de la demande par FTGP
+3. Signature officielle de la charte
+4. Onboarding et remise des ressources
+5. Passage à l'action (recrutement, expérimentation, sensibilisation)
+6. Participation aux ateliers collectifs
+7. Suivi et valorisation des actions
+Engagement : https://www.frenchtech-grandparis.com/ft-programs/gen50tech--frenchtech-grandparis
 
 === PROGRAMMES NATIONAUX ===
 
